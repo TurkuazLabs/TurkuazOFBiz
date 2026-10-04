@@ -1,8 +1,8 @@
 # Dosya Yolu: /.github/workflows/ofbiz-config-ci.yml
 # Amac: TurkuazOFBiz araclarinin statik ve gercek Docker smoke dogrulamasini calistirir
 # Tool - YAML
-# Version: 2.0.0
-# Aciklama: Syntax, ShellCheck, resolver ve resmi 24.09.07 demo container smoke testlerini kosar
+# Version: 2.1.0
+# Aciklama: Syntax, ShellCheck, release metadata, resolver ve gercek Docker testlerini kosar
 #
 # Bagimli Oldugu Katman: Tool | Controller | Service | Repo | Config
 
@@ -19,7 +19,14 @@ on:
       - "repositories/**"
       - "services/**"
       - "tools/**"
+      - "views/**"
+      - "README.md"
+      - "LICENSE"
+      - "VERSION"
+      - "CHANGELOG.md"
+      - "RELEASE_NOTES.md"
       - ".github/workflows/ofbiz-config-ci.yml"
+      - ".github/workflows/release.yml"
   pull_request:
     paths:
       - "config/**"
@@ -28,7 +35,14 @@ on:
       - "repositories/**"
       - "services/**"
       - "tools/**"
+      - "views/**"
+      - "README.md"
+      - "LICENSE"
+      - "VERSION"
+      - "CHANGELOG.md"
+      - "RELEASE_NOTES.md"
       - ".github/workflows/ofbiz-config-ci.yml"
+      - ".github/workflows/release.yml"
   workflow_dispatch:
 
 permissions:

@@ -1,0 +1,78 @@
+# Dosya Yolu: /.github/workflows/release.yml
+# Amac: Basarili main CI sonrasinda VERSION degerinden GitHub tag ve release olusturur
+# Tool - YAML
+# Version: 1.0.0
+# Aciklama: Ayni surum release edilmemisse RELEASE_NOTES.md ile otomatik stabil GitHub Release yayinlar
+#
+# Bagimli Oldugu Katman: Tool | View | Config
+
+name: TurkuazOFBiz Release
+
+on:
+  workflow_run:
+    workflows:
+      - TurkuazOFBiz CI
+    types:
+      - completed
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Publish version
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout validated commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0
+
+      - name: Resolve release metadata
+        id: meta
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          VERSION="$(tr -d '[:space:]' < VERSION)"
+          TAG="v${VERSION}"
+
+          if [[ ! "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Invalid VERSION: ${VERSION}" >&2
+            exit 1
+          fi
+
+          if gh release view "${TAG}" --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then
+            echo "Release ${TAG} already exists; nothing to publish."
+            echo "skip=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "skip=false" >> "${GITHUB_OUTPUT}"
+          fi
+
+          echo "version=${VERSION}" >> "${GITHUB_OUTPUT}"
+          echo "tag=${TAG}" >> "${GITHUB_OUTPUT}"
+
+      - name: Publish GitHub Release
+        if: steps.meta.outputs.skip != 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          TAG: ${{ steps.meta.outputs.tag }}
+        run: |
+          set -euo pipefail
+
+          gh release create "${TAG}" \
+            --repo "${GITHUB_REPOSITORY}" \
+            --target "${HEAD_SHA}" \
+            --title "TurkuazOFBiz ${TAG}" \
+            --notes-file RELEASE_NOTES.md \
+            --latest
