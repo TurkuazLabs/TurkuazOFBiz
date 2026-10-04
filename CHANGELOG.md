@@ -1,7 +1,7 @@
 # Dosya Yolu: /CHANGELOG.md
 # Amac: TurkuazOFBiz surumlerindeki kullaniciya donuk degisiklikleri kaydeder
 # View - Markdown
-# Version: 1.0.0
+# Version: 1.0.1
 # Aciklama: Semantic versioning tabanli proje degisiklik gecmisi
 #
 # Bagimli Oldugu Katman: View
@@ -11,6 +11,19 @@
 Tum dikkat cekici TurkuazOFBiz degisiklikleri bu dosyada kaydedilir.
 
 Surumleme Semantic Versioning mantigini izler.
+
+## [1.0.1] - 2026-10-04
+
+### Fixed
+
+- Apache OFBiz release .sha512 dosyalarinin Apache checksum formatinda olmasi nedeniyle sabit release ZIP kurulumunun SHA-512 dogrulamasinda hata vermesi duzeltildi.
+- Checksum parser artik hem Apache filename-colon-hash formatini hem GNU hash-filename formatini destekler.
+- Basarisiz download veya checksum dogrulamasinda gecici dosyalar temizlenir.
+
+### Verified
+
+- Apache OFBiz 24.09.07 resmi SHA-512 dosya formati ile parser testi eklendi.
+- Mevcut release/snapshot resolver, Docker smoke ve 22.01 Dockerfile kontrolleri korunur.
 
 ## [1.0.0] - 2026-10-04
 

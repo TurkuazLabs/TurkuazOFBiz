@@ -1,7 +1,7 @@
 # Dosya Yolu: /tools/ci/validate-structure.sh
 # Amac: TurkuazOFBiz konfigurasyon yapisinin syntax, katman, resolver ve release metadata testlerini calistirir
 # Tool - Shell
-# Version: 1.3.0
+# Version: 1.4.0
 # Aciklama: CI icin ag gerektirmeyen syntax, katman, release/snapshot, Docker image ve proje surum testleri
 #
 # Bagimli Oldugu Katman: Tool | Controller | Service | Repo | View | Language | Config
@@ -90,6 +90,35 @@ validate_headers() {
     )
 }
 
+validate_release_checksum_parser() {
+    local work_dir
+    local apache_checksum_file
+    local gnu_checksum_file
+    local expected
+
+    # shellcheck source=/dev/null
+    source "${OFBIZ_ROOT_DIR}/tools/release-tool.sh"
+
+    work_dir="$(mktemp -d)"
+    apache_checksum_file="${work_dir}/apache.sha512"
+    gnu_checksum_file="${work_dir}/gnu.sha512"
+    expected="6602fa1f9752629486e2e0490ef95728f75e998496ec014d3eaa87e779ee7fd71efdef1a5d76856fe7a8c238c094d5dd64580963a4a560e5b01415cdaf9e28c2"
+
+    cat > "${apache_checksum_file}" <<'EOF'
+apache-ofbiz-24.09.07.zip: 6602FA1F 97526294 86E2E049 0EF95728 F75E9984
+                           96EC014D 3EAA87E7 79EE7FD7 1EFDEF1A 5D76856F
+                           E7A8C238 C094D5DD 64580963 A4A560E5 B01415CD
+                           AF9E28C2
+EOF
+
+    printf '%s  apache-ofbiz-24.09.07.zip\n' "${expected}" > "${gnu_checksum_file}"
+
+    assert_equals "${expected}" "$(ofbiz_tool_read_sha512 "${apache_checksum_file}")" "Apache SHA-512 parser"
+    assert_equals "${expected}" "$(ofbiz_tool_read_sha512 "${gnu_checksum_file}")" "GNU SHA-512 parser"
+
+    rm -rf "${work_dir}"
+}
+
 validate_resolvers() {
     # shellcheck source=/dev/null
     source "${OFBIZ_ROOT_DIR}/services/version-resolver.sh"
@@ -129,6 +158,7 @@ validate_controller_readonly_commands() {
 main() {
     validate_directories
     validate_release_metadata
+    validate_release_checksum_parser
     validate_bash_syntax
     validate_headers
     validate_resolvers
