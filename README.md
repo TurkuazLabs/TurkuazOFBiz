@@ -1,7 +1,7 @@
 # Dosya Yolu: /README.md
 # Amac: TurkuazOFBiz projesinin ana giris, kurulum ve kullanim rehberini sunar
 # View - Markdown
-# Version: 3.8.0
+# Version: 3.9.0
 # Aciklama: Apache OFBiz release, snapshot, runtime ve Docker yonetim araclarini tanitir
 #
 # Bagimli Oldugu Katman: View | Controller | Service | Repo | Tool | Language | Config
@@ -11,7 +11,7 @@
 [![CI](https://github.com/TurkuazLabs/TurkuazOFBiz/actions/workflows/ofbiz-config-ci.yml/badge.svg)](https://github.com/TurkuazLabs/TurkuazOFBiz/actions/workflows/ofbiz-config-ci.yml)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 
-**Current version:** v1.4.4
+**Current version:** v1.5.0
 
 TurkuazOFBiz, Apache OFBiz release ve branch tabanli snapshot hedeflerini ayni arabirimden yonetmek icin gelistirilen acik kaynak yonetim aracidir.
 
@@ -23,7 +23,10 @@ Windows + WSL2 + Docker Desktop kullananlar icin komut yazmak gerekmez.
 
 1. Son release altindaki `TurkuazOFBiz-Installer.bat` dosyasini indirin.
 2. Dosyaya cift tiklayin.
-3. Installer stabil TurkuazOFBiz surumunu hazirlar, Docker Desktop'i gerekirse baslatir, Ubuntu WSL dagitimini secer, OFBiz 24.09.07 demo image'ini ceker, guclu admin parolasi uretir ve tarayiciyi acar.
+3. Installer stabil TurkuazOFBiz surumunu hazirlar, Docker Desktop'i gerekirse baslatir ve interaktif OFBiz surum secim menusunu acar.
+4. Release serisi, tam surum ve Demo/Runtime varyanti secilir.
+5. Resmi Docker image varsa cekilir; yoksa desteklenen hedef kaynak koddan local Docker image olarak build edilir.
+6. Secim kaydedilir ve masaustu kisayolu sonraki acilista ayni hedefi baslatir.
 
 Sabit latest asset:
 
@@ -38,6 +41,23 @@ https://localhost:8443/partymgr
 ~~~
 
 Installer container'i baslattiktan sonra bu endpoint 2xx/3xx cevap verene kadar bekler ve sonra tarayiciyi acar.
+
+Windows installer su hedefleri menuden sunar:
+
+~~~text
+Release 24.09 : 24.09.01 - 24.09.07
+Release 18.12 : 18.12.01 - 18.12.19
+Release 17.12 : 17.12.01 - 17.12.09
+Snapshot      : trunk, release24.09, release22.01
+~~~
+
+17.12 compat Docker yolu demo varyantiyla calisir. Diger hedeflerde Demo veya Runtime secilebilir. Farkli hedef/varyant container ve parola bilgileri birbirinden ayrilir; ayni 8443 portu kullanildigi icin installer secilen hedefi baslatirken diger TurkuazOFBiz container'larini durdurur.
+
+Son secim burada tutulur:
+
+~~~text
+%LOCALAPPDATA%\TurkuazOFBiz\installer-state.json
+~~~
 
 Varsayilan demo image resmi Apache demo verisini kullanir. Demo girisi:
 

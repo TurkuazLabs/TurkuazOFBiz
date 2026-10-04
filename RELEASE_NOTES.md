@@ -1,34 +1,52 @@
 # Dosya Yolu: /RELEASE_NOTES.md
-# Amac: TurkuazOFBiz v1.4.4 GitHub release notlarini hazirlar
+# Amac: TurkuazOFBiz v1.5.0 GitHub release notlarini hazirlar
 # View - Markdown
-# Version: 1.4.4
-# Aciklama: Demo image admin parola uyumsuzlugunu duzeltir
+# Version: 1.5.0
+# Aciklama: Interaktif coklu OFBiz surum secimli Windows installer'i ozetler
 #
-# Bagimli Oldugu Katman: View | Tool
+# Bagimli Oldugu Katman: View | Tool | Config
 
-# TurkuazOFBiz v1.4.4
+# TurkuazOFBiz v1.5.0
 
-Bu patch resmi Apache OFBiz preloaded demo image ile installer arasindaki admin parola uyumsuzlugunu duzeltir.
+v1.5.0 Windows installer'i tek sabit OFBiz surumunden interaktif coklu surum yoneticisine donusturur.
 
-## Demo girisi
+## Surum secim menusu
 
-Apache OFBiz preloaddemo image demo verisini image icinde hazir getirir. Bu demo veri icindeki varsayilan yonetici hesabi:
+Installer parametresiz install action ile acildiginda once hedef ailesini sorar:
 
-- Kullanici: admin
-- Parola: ofbiz
+1. Release 24.09
+2. Release 18.12
+3. Release 17.12
+4. Snapshot / branch
 
-Demo veri yuklendiginde Apache entrypoint admin kullanicisini zaten yuklenmis olarak isaretledigi icin sonradan verilen OFBIZ_ADMIN_PASSWORD degeri bu hesabin parolasini degistirmez.
+Release secildiginde config/versions.conf katalogundaki tum desteklenen tam surumler listelenir.
 
-TurkuazOFBiz installer artik demo varyantinda rastgele ve gecersiz bir parola gostermek yerine resmi demo parolasini kullanir ve admin-password.txt dosyasini ofbiz ile senkronize eder.
+Snapshot secildiginde:
 
-Runtime varyantinda rastgele guclu parola davranisi korunur.
+- trunk
+- release24.09
+- release22.01
 
-## Password action
+sunulur.
 
-Windows:
+17.12 compat hedeflerinde demo varyanti otomatik secilir. Diger hedeflerde Demo veya Runtime secilebilir.
 
-    .\TurkuazOFBiz-Installer.ps1 -Action password
+## Docker image hazirlama
 
-Linux / WSL:
+Installer once resmi Apache OFBiz Docker image'ini kullanmayi dener.
 
-    ./install.sh password
+Resmi image eslestirmesi veya manifesti yoksa ayni hedef icin kaynak koddan local Docker image build eder. Bu nedenle eski 18.12/17.12 veya release22.01 hedeflerinin ilk kurulumu 24.09 resmi image kurulumundan daha uzun surebilir.
+
+## Hedef durumu
+
+Basarili secim su dosyada saklanir:
+
+    %LOCALAPPDATA%\TurkuazOFBiz\installer-state.json
+
+Masaustu TurkuazOFBiz kisayolu sonraki acilista bu hedefi tekrar baslatir.
+
+## Izolasyon
+
+Her hedef ve varyant kendi TurkuazOFBiz container kimligini ve credential dosyasini kullanir. Demo parolasi admin / ofbiz olarak kalir; Runtime varyanti guclu rastgele parola uretir.
+
+Tum hedefler varsayilan olarak 127.0.0.1:8443 kullandigi icin installer secilen hedefi baslatmadan once diger TurkuazOFBiz container'larini durdurur.

@@ -1,7 +1,7 @@
 # Dosya Yolu: /CHANGELOG.md
 # Amac: TurkuazOFBiz surumlerindeki kullaniciya donuk degisiklikleri kaydeder
 # View - Markdown
-# Version: 1.4.4
+# Version: 1.5.0
 # Aciklama: Semantic versioning tabanli proje degisiklik gecmisi
 #
 # Bagimli Oldugu Katman: View
@@ -11,6 +11,32 @@
 Tum dikkat cekici TurkuazOFBiz degisiklikleri bu dosyada kaydedilir.
 
 Surumleme Semantic Versioning mantigini izler.
+
+## [1.5.0] - 2026-10-04
+
+### Added
+
+- Windows installer icin interaktif OFBiz release/snapshot secim menusu.
+- 24.09, 18.12 ve 17.12 serilerindeki desteklenen tam release surumlerini config katalogundan otomatik listeleme.
+- trunk, release24.09 ve release22.01 snapshot branch secimi.
+- Demo/Runtime varyant secimi; 17.12 compat hedeflerinde demo zorunlulugu.
+- Secilen hedefi installer-state.json ile kalici kaydetme.
+- Her hedef/varyant icin ayri credential dosyasi.
+- Resmi Docker image bulunmadiginda otomatik local Docker build fallback'i.
+- Secilen hedef/varyanta ozel TurkuazOFBiz container adi.
+
+### Changed
+
+- install action parametre verilmezse 24.09.07'yi sessizce secmek yerine menu acar.
+- Masaustu start kisayolu son basarili kurulum secimini kullanir.
+- Ayni 8443 portunu kullanan TurkuazOFBiz hedefleri arasinda gecis yaparken diger TurkuazOFBiz container'lari durdurulur.
+- Demo ve runtime credential/storage container kimlikleri birbirinden ayrildi.
+
+### Verified
+
+- PowerShell installer parser testi korunur.
+- CI menu katalog referanslari, state dosyasi, container adlandirma ve local build fallback kodunu dogrular.
+- Mevcut release/snapshot runtime, Doctor ve Docker smoke matrisi korunur.
 
 ## [1.4.4] - 2026-10-04
 

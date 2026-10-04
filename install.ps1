@@ -1,8 +1,8 @@
 # Dosya Yolu: /install.ps1
 # Amac: Windows kullanicisi icin TurkuazOFBiz ve OFBiz Docker kurulumunu tek komutta yonetir
 # Tool - PowerShell
-# Version: 1.2.0
-# Aciklama: Stabil TurkuazOFBiz release'ini indirir, WSL/Docker'i hazirlar, OFBiz 24.09.07 demo container'ini baslatir ve tarayiciyi acar
+# Version: 1.3.0
+# Aciklama: Interaktif release/snapshot secimi, WSL/Docker hazirligi ve coklu OFBiz hedef yonetimini tek installer'da sunar
 #
 # Bagimli Oldugu Katman: Tool | Controller | Service | Config
 
@@ -11,9 +11,11 @@ param(
     [ValidateSet("install", "start", "stop", "status", "doctor", "open", "password")]
     [string]$Action = "install",
     [string]$Distro = "",
-    [string]$OFBizVersion = "24.09.07",
-    [ValidateSet("runtime", "demo")]
-    [string]$Variant = "demo",
+    [ValidateSet("", "release", "snapshot")]
+    [string]$TargetType = "",
+    [string]$OFBizVersion = "",
+    [ValidateSet("", "runtime", "demo")]
+    [string]$Variant = "",
     [ValidateRange(1, 65535)]
     [int]$HttpsPort = 8443
 )
@@ -27,6 +29,8 @@ $ProjectUrl = "https://github.com/$ProjectRepository"
 $InstallRoot = Join-Path $env:LOCALAPPDATA "TurkuazOFBiz"
 $ManagedRepo = Join-Path $InstallRoot "repo"
 $SecretFile = Join-Path $InstallRoot "admin-password.txt"
+$CredentialsDir = Join-Path $InstallRoot "credentials"
+$StateFile = Join-Path $InstallRoot "installer-state.json"
 $DesktopShortcut = Join-Path ([Environment]::GetFolderPath("Desktop")) "TurkuazOFBiz.lnk"
 $DefaultAppPath = "/partymgr"
 
@@ -44,6 +48,182 @@ function Fail {
 function Test-Command {
     param([string]$Name)
     return [bool](Get-Command $Name -ErrorAction SilentlyContinue)
+}
+
+function Read-MenuChoice {
+    param(
+        [string]$Prompt,
+        [int]$Min,
+        [int]$Max,
+        [int]$Default = 1
+    )
+
+    while ($true) {
+        $value = Read-Host "$Prompt [$Default]"
+        if ([string]::IsNullOrWhiteSpace($value)) {
+            return $Default
+        }
+
+        $number = 0
+        if ([int]::TryParse($value, [ref]$number) -and $number -ge $Min -and $number -le $Max) {
+            return $number
+        }
+
+        Write-Host "Gecersiz secim. $Min-$Max arasinda bir deger girin." -ForegroundColor Yellow
+    }
+}
+
+function Get-ConfigMultilineValues {
+    param(
+        [string]$ConfigPath,
+        [string]$VariableName
+    )
+
+    $content = Get-Content -Path $ConfigPath -Raw
+    $pattern = '(?ms)^' + [regex]::Escape($VariableName) + '="(.*?)"'
+    $match = [regex]::Match($content, $pattern)
+
+    if (-not $match.Success) {
+        Fail "Config degeri bulunamadi: $VariableName"
+    }
+
+    return @(
+        $match.Groups[1].Value -split "\r?\n" |
+            ForEach-Object { $_.Trim() } |
+            Where-Object { $_ }
+    )
+}
+
+function Select-ValueMenu {
+    param(
+        [string]$Title,
+        [string[]]$Values
+    )
+
+    if (-not $Values -or $Values.Count -eq 0) {
+        Fail "Secim listesi bos: $Title"
+    }
+
+    Write-Host ""
+    Write-Host $Title -ForegroundColor Cyan
+
+    for ($index = 0; $index -lt $Values.Count; $index++) {
+        $suffix = ""
+        if ($index -eq 0) {
+            $suffix = "  [onerilen/en yeni]"
+        }
+
+        Write-Host (" {0,2} - {1}{2}" -f ($index + 1), $Values[$index], $suffix)
+    }
+
+    $choice = Read-MenuChoice -Prompt "Secim" -Min 1 -Max $Values.Count -Default 1
+    return $Values[$choice - 1]
+}
+
+function Select-InstallTarget {
+    $versionsConfig = Join-Path $ManagedRepo "config\versions.conf"
+    $snapshotsConfig = Join-Path $ManagedRepo "config\snapshots.conf"
+
+    Write-Host ""
+    Write-Host "============================================================" -ForegroundColor Cyan
+    Write-Host " TurkuazOFBiz - OFBiz Surum Secimi" -ForegroundColor Cyan
+    Write-Host "============================================================" -ForegroundColor Cyan
+    Write-Host " 1 - Release 24.09"
+    Write-Host " 2 - Release 18.12  (legacy, local Docker build gerekebilir)"
+    Write-Host " 3 - Release 17.12  (legacy, demo)"
+    Write-Host " 4 - Snapshot / branch"
+
+    $family = Read-MenuChoice -Prompt "Kurulacak seri" -Min 1 -Max 4 -Default 1
+
+    switch ($family) {
+        1 {
+            $script:TargetType = "release"
+            $values = @(Get-ConfigMultilineValues -ConfigPath $versionsConfig -VariableName "OFBIZ_RELEASES_24_09" | Sort-Object -Descending)
+            $script:OFBizVersion = Select-ValueMenu -Title "24.09 surumu" -Values $values
+        }
+        2 {
+            $script:TargetType = "release"
+            $values = @(Get-ConfigMultilineValues -ConfigPath $versionsConfig -VariableName "OFBIZ_RELEASES_18_12" | Sort-Object -Descending)
+            $script:OFBizVersion = Select-ValueMenu -Title "18.12 surumu" -Values $values
+        }
+        3 {
+            $script:TargetType = "release"
+            $values = @(Get-ConfigMultilineValues -ConfigPath $versionsConfig -VariableName "OFBIZ_RELEASES_17_12" | Sort-Object -Descending)
+            $script:OFBizVersion = Select-ValueMenu -Title "17.12 surumu" -Values $values
+        }
+        4 {
+            $script:TargetType = "snapshot"
+            $values = @(Get-ConfigMultilineValues -ConfigPath $snapshotsConfig -VariableName "OFBIZ_SNAPSHOT_BRANCHES")
+            $script:OFBizVersion = Select-ValueMenu -Title "Snapshot branch" -Values $values
+        }
+    }
+
+    if ($script:TargetType -eq "release" -and $script:OFBizVersion -like "17.12.*") {
+        $script:Variant = "demo"
+        Write-Host ""
+        Write-Host "17.12 compat Docker yolu demo varyantini kullanir." -ForegroundColor Yellow
+    }
+    else {
+        Write-Host ""
+        Write-Host "Calisma verisi:"
+        Write-Host " 1 - Demo    (hazir ornek veri; test icin onerilen)"
+        Write-Host " 2 - Runtime (seed veri; yeni admin parolasi)"
+        $variantChoice = Read-MenuChoice -Prompt "Varyant" -Min 1 -Max 2 -Default 1
+        $script:Variant = if ($variantChoice -eq 1) { "demo" } else { "runtime" }
+    }
+
+    Write-Host ""
+    Write-Host "Secilen hedef: $($script:TargetType) / $($script:OFBizVersion) / $($script:Variant)" -ForegroundColor Green
+}
+
+function Save-InstallerState {
+    New-Item -ItemType Directory -Force -Path $InstallRoot | Out-Null
+
+    $state = [ordered]@{
+        target_type = $TargetType
+        target = $OFBizVersion
+        variant = $Variant
+        https_port = $HttpsPort
+    }
+
+    $state | ConvertTo-Json | Set-Content -Path $StateFile -Encoding UTF8
+}
+
+function Restore-InstallerState {
+    if (-not (Test-Path $StateFile)) {
+        Fail "Kayitli OFBiz hedefi bulunamadi. Installer'i install action ile calistirin."
+    }
+
+    $state = Get-Content -Path $StateFile -Raw | ConvertFrom-Json
+
+    if (-not $TargetType) {
+        $script:TargetType = [string]$state.target_type
+    }
+
+    if (-not $OFBizVersion) {
+        $script:OFBizVersion = [string]$state.target
+    }
+
+    if (-not $Variant) {
+        $script:Variant = [string]$state.variant
+    }
+
+    if ($state.https_port) {
+        $script:HttpsPort = [int]$state.https_port
+    }
+}
+
+function Get-TargetCredentialFile {
+    New-Item -ItemType Directory -Force -Path $CredentialsDir | Out-Null
+    $safeTarget = ($OFBizVersion -replace '[^A-Za-z0-9._-]', '-')
+    return Join-Path $CredentialsDir "$TargetType-$safeTarget-$Variant.txt"
+}
+
+function Stop-OtherTurkuazContainers {
+    param([string]$LinuxDistro)
+
+    $command = "docker ps --format '{{.Names}}' | grep -E '^(ofbiz-(release|snapshot)-|turkuazofbiz-)' | xargs -r docker stop >/dev/null"
+    Invoke-WslBash -LinuxDistro $LinuxDistro -Command $command
 }
 
 function Get-LatestReleaseTag {
@@ -232,27 +412,32 @@ function New-AdminPassword {
 
 function Get-AdminPassword {
     New-Item -ItemType Directory -Force -Path $InstallRoot | Out-Null
+    $targetSecret = Get-TargetCredentialFile
 
     if ($Variant -eq "demo") {
         $password = "ofbiz"
+        Set-Content -Path $targetSecret -Value $password -Encoding ASCII
         Set-Content -Path $SecretFile -Value $password -Encoding ASCII
         return $password
     }
 
-    if (Test-Path $SecretFile) {
-        $existing = (Get-Content -Path $SecretFile -Raw).Trim()
+    if (Test-Path $targetSecret) {
+        $existing = (Get-Content -Path $targetSecret -Raw).Trim()
         if ($existing) {
+            Set-Content -Path $SecretFile -Value $existing -Encoding ASCII
             return $existing
         }
     }
 
     $password = New-AdminPassword
+    Set-Content -Path $targetSecret -Value $password -Encoding ASCII
     Set-Content -Path $SecretFile -Value $password -Encoding ASCII
     return $password
 }
 
 function Get-ContainerName {
-    return "ofbiz-release-" + ($OFBizVersion -replace "\.", "-")
+    $safeTarget = ($OFBizVersion -replace '[^A-Za-z0-9_-]', '-')
+    return "turkuazofbiz-$Variant-$TargetType-$safeTarget"
 }
 
 function Ensure-DesktopShortcut {
@@ -303,8 +488,30 @@ function Open-OFBiz {
     Start-Process (Get-OFBizUrl) | Out-Null
 }
 
+function Prepare-TargetImage {
+    param(
+        [string]$LinuxDistro,
+        [string]$LinuxRepo
+    )
+
+    Write-Step "Apache OFBiz $TargetType $OFBizVersion $Variant image kontrol ediliyor"
+
+    & wsl.exe -d $LinuxDistro -- bash -lc "cd '$LinuxRepo' && bash controllers/ofbiz.sh docker pull '$TargetType' '$OFBizVersion' '$Variant'"
+    if ($LASTEXITCODE -eq 0) {
+        return
+    }
+
+    Write-Step "Resmi image bulunamadi; kaynak koddan local Docker image build ediliyor"
+    Invoke-WslBash -LinuxDistro $LinuxDistro -Command "cd '$LinuxRepo' && bash controllers/ofbiz.sh docker build '$TargetType' '$OFBizVersion' '$Variant'"
+}
+
 function Invoke-Install {
     Sync-ManagedRepo
+
+    if (-not $TargetType -or -not $OFBizVersion -or -not $Variant) {
+        Select-InstallTarget
+    }
+
     $linuxDistro = Resolve-WslDistro
     Write-Step "WSL dagitimi: $linuxDistro"
     Ensure-Docker -LinuxDistro $linuxDistro
@@ -315,19 +522,24 @@ function Invoke-Install {
     Write-Step "Docker ortam kontrolu"
     Invoke-WslBash -LinuxDistro $linuxDistro -Command "cd '$linuxRepo' && bash controllers/ofbiz.sh doctor docker"
 
-    Write-Step "Apache OFBiz $OFBizVersion $Variant image hazirlaniyor"
-    Invoke-WslBash -LinuxDistro $linuxDistro -Command "cd '$linuxRepo' && bash controllers/ofbiz.sh docker pull release '$OFBizVersion' '$Variant'"
+    Prepare-TargetImage -LinuxDistro $linuxDistro -LinuxRepo $linuxRepo
+
+    Write-Step "Diger TurkuazOFBiz container'lari durduruluyor"
+    Stop-OtherTurkuazContainers -LinuxDistro $linuxDistro
 
     Write-Step "Apache OFBiz baslatiliyor"
-    Invoke-WslBash -LinuxDistro $linuxDistro -Command "cd '$linuxRepo' && OFBIZ_ADMIN_PASSWORD='$password' OFBIZ_HTTPS_PORT='$HttpsPort' bash controllers/ofbiz.sh docker run release '$OFBizVersion' '$Variant'"
+    $containerPrefix = "turkuazofbiz-$Variant"
+    Invoke-WslBash -LinuxDistro $linuxDistro -Command "cd '$linuxRepo' && OFBIZ_DOCKER_CONTAINER_NAME='$containerPrefix' OFBIZ_ADMIN_PASSWORD='$password' OFBIZ_HTTPS_PORT='$HttpsPort' bash controllers/ofbiz.sh docker run '$TargetType' '$OFBizVersion' '$Variant'"
 
     Wait-OFBizReady -LinuxDistro $linuxDistro
+    Save-InstallerState
     Ensure-DesktopShortcut
 
     Write-Host ""
     Write-Host "============================================================" -ForegroundColor Green
     Write-Host " TurkuazOFBiz hazir" -ForegroundColor Green
     Write-Host "============================================================" -ForegroundColor Green
+    Write-Host " Hedef       : $TargetType / $OFBizVersion / $Variant"
     Write-Host " Adres       : $(Get-OFBizUrl)"
     Write-Host " Kullanici   : admin"
     Write-Host " Parola      : $password"
@@ -339,6 +551,7 @@ function Invoke-Install {
 }
 
 function Invoke-Start {
+    Restore-InstallerState
     $linuxDistro = Resolve-WslDistro
     Ensure-Docker -LinuxDistro $linuxDistro
     $container = Get-ContainerName
@@ -349,12 +562,14 @@ function Invoke-Start {
         return
     }
 
+    Stop-OtherTurkuazContainers -LinuxDistro $linuxDistro
     Invoke-WslBash -LinuxDistro $linuxDistro -Command "docker start '$container' >/dev/null"
     Wait-OFBizReady -LinuxDistro $linuxDistro
     Open-OFBiz
 }
 
 function Invoke-Stop {
+    Restore-InstallerState
     $linuxDistro = Resolve-WslDistro
     Ensure-Docker -LinuxDistro $linuxDistro
     $container = Get-ContainerName
@@ -364,10 +579,12 @@ function Invoke-Stop {
 }
 
 function Invoke-Status {
+    Restore-InstallerState
     $linuxDistro = Resolve-WslDistro
     Ensure-Docker -LinuxDistro $linuxDistro
     $container = Get-ContainerName
 
+    Write-Host "Secili hedef: $TargetType / $OFBizVersion / $Variant"
     Invoke-WslBash -LinuxDistro $linuxDistro -Command "docker ps -a --filter 'name=^/$container$' --format 'table {{.Names}}\t{{.Status}}\t{{.Image}}\t{{.Ports}}'"
 }
 
@@ -384,20 +601,15 @@ function Invoke-Doctor {
 }
 
 function Invoke-Password {
-    if ($Variant -eq "demo") {
-        $password = Get-AdminPassword
-    }
-    elseif (Test-Path $SecretFile) {
-        $password = (Get-Content -Path $SecretFile -Raw).Trim()
-    }
-    else {
-        Fail "Runtime admin parola dosyasi bulunamadi: $SecretFile"
-    }
+    Restore-InstallerState
+    $password = Get-AdminPassword
+    $targetSecret = Get-TargetCredentialFile
 
     Write-Host "Kullanici    : admin"
     Write-Host "Parola       : $password"
+    Write-Host "Hedef        : $TargetType / $OFBizVersion"
     Write-Host "Varyant      : $Variant"
-    Write-Host "Parola dosya : $SecretFile"
+    Write-Host "Parola dosya : $targetSecret"
 }
 
 try {
