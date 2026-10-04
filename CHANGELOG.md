@@ -1,7 +1,7 @@
 # Dosya Yolu: /CHANGELOG.md
 # Amac: TurkuazOFBiz surumlerindeki kullaniciya donuk degisiklikleri kaydeder
 # View - Markdown
-# Version: 1.5.0
+# Version: 1.5.1
 # Aciklama: Semantic versioning tabanli proje degisiklik gecmisi
 #
 # Bagimli Oldugu Katman: View
@@ -11,6 +11,29 @@
 Tum dikkat cekici TurkuazOFBiz degisiklikleri bu dosyada kaydedilir.
 
 Surumleme Semantic Versioning mantigini izler.
+
+## [1.5.1] - 2026-10-04
+
+### Added
+
+- Windows icin TurkuazOFBiz-Setup.zip release paketi.
+- ZIP icinde yerel TurkuazOFBiz-Launcher.cmd, TurkuazOFBiz-Installer.ps1 ve README-FIRST.txt.
+- Windows setup ZIP icin SHA-256 checksum release asset'i.
+- CI icinde Windows setup ZIP olusturma, icerik ve checksum dogrulamasi.
+
+### Changed
+
+- Windows son kullanici akisi tek basina BAT/PS1 indirmek yerine birlikte paketlenmis ZIP launcher modeline tasindi.
+- Masaustu kisayolu launcher'i start nopause ile cagirir.
+- Release workflow artik standalone BAT yerine Setup ZIP + SHA-256 yayinlar.
+
+### Fixed
+
+- Yeni launcher internetten PS1 indirmez.
+- ExecutionPolicy Bypass tamamen kaldirildi.
+- Launcher yerel PS1 icin Unblock-File uygular; RemoteSigned sistemlerde manuel Unblock-File ihtiyacini kaldirir.
+- Installer hata ile sonlanirsa launcher penceresi hemen kapanmaz.
+- Launcher hem release paketindeki TurkuazOFBiz-Installer.ps1 adini hem yonetilen repodaki install.ps1 adini destekler.
 
 ## [1.5.0] - 2026-10-04
 

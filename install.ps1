@@ -1,7 +1,7 @@
 # Dosya Yolu: /install.ps1
 # Amac: Windows kullanicisi icin TurkuazOFBiz ve OFBiz Docker kurulumunu tek komutta yonetir
 # Tool - PowerShell
-# Version: 1.3.0
+# Version: 1.3.1
 # Aciklama: Interaktif release/snapshot secimi, WSL/Docker hazirligi ve coklu OFBiz hedef yonetimini tek installer'da sunar
 #
 # Bagimli Oldugu Katman: Tool | Controller | Service | Config
@@ -449,7 +449,7 @@ function Ensure-DesktopShortcut {
         $shell = New-Object -ComObject WScript.Shell
         $shortcut = $shell.CreateShortcut($DesktopShortcut)
         $shortcut.TargetPath = Join-Path $ManagedRepo "install.bat"
-        $shortcut.Arguments = "start"
+        $shortcut.Arguments = "start nopause"
         $shortcut.WorkingDirectory = $ManagedRepo
         $shortcut.Description = "TurkuazOFBiz baslat"
         $shortcut.Save()

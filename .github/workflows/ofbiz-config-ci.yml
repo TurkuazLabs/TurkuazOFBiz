@@ -1,7 +1,7 @@
 # Dosya Yolu: /.github/workflows/ofbiz-config-ci.yml
 # Amac: TurkuazOFBiz araclarinin statik, release matrisi, doctor ve Docker dogrulamalarini calistirir
 # Tool - YAML
-# Version: 2.12.0
+# Version: 2.13.0
 # Aciklama: Syntax, ShellCheck, release metadata, gercek release/JDK/Gradle matrisi ve Docker testlerini kosar
 #
 # Bagimli Oldugu Katman: Tool | Controller | Service | Repo | Config
@@ -84,8 +84,14 @@ jobs:
           set -euo pipefail
           bash -n install.sh
           shellcheck -s bash -S error install.sh
+          bash -n tools/package-windows-installer.sh
+          shellcheck -s bash -S error tools/package-windows-installer.sh
           grep -Fq "TurkuazOFBiz-Installer.ps1" install.bat
-          grep -Fq "releases/latest/download" install.bat
+          grep -Fq "Unblock-File" install.bat
+          grep -Fq "pause" install.bat
+          ! grep -Fq "ExecutionPolicy Bypass" install.bat
+          ! grep -Fq "Invoke-WebRequest" install.bat
+          ! grep -Fq "releases/latest/download" install.bat
           ! grep -Fq -- "-- wslpath" install.ps1
           grep -Fq '"/mnt/$drive/$relative"' install.ps1
           grep -Fq '$DefaultAppPath = "/partymgr"' install.ps1
@@ -122,6 +128,26 @@ jobs:
             $errors | Format-List
             exit 1
           }
+
+      - name: Validate packaged Windows installer
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          PACKAGE_DIR="$RUNNER_TEMP/windows-installer"
+          bash tools/package-windows-installer.sh "$PACKAGE_DIR"
+
+          test -s "$PACKAGE_DIR/TurkuazOFBiz-Setup.zip"
+          test -s "$PACKAGE_DIR/TurkuazOFBiz-Setup.zip.sha256"
+
+          (
+            cd "$PACKAGE_DIR"
+            sha256sum -c TurkuazOFBiz-Setup.zip.sha256
+            unzip -Z1 TurkuazOFBiz-Setup.zip | grep -Fxq "TurkuazOFBiz-Launcher.cmd"
+            unzip -Z1 TurkuazOFBiz-Setup.zip | grep -Fxq "TurkuazOFBiz-Installer.ps1"
+            unzip -Z1 TurkuazOFBiz-Setup.zip | grep -Fxq "README-FIRST.txt"
+          )
+
 
 
   release-runtime-matrix:

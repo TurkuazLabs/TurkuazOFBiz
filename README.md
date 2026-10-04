@@ -1,7 +1,7 @@
 # Dosya Yolu: /README.md
 # Amac: TurkuazOFBiz projesinin ana giris, kurulum ve kullanim rehberini sunar
 # View - Markdown
-# Version: 3.9.0
+# Version: 3.10.0
 # Aciklama: Apache OFBiz release, snapshot, runtime ve Docker yonetim araclarini tanitir
 #
 # Bagimli Oldugu Katman: View | Controller | Service | Repo | Tool | Language | Config
@@ -11,7 +11,7 @@
 [![CI](https://github.com/TurkuazLabs/TurkuazOFBiz/actions/workflows/ofbiz-config-ci.yml/badge.svg)](https://github.com/TurkuazLabs/TurkuazOFBiz/actions/workflows/ofbiz-config-ci.yml)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 
-**Current version:** v1.5.0
+**Current version:** v1.5.1
 
 TurkuazOFBiz, Apache OFBiz release ve branch tabanli snapshot hedeflerini ayni arabirimden yonetmek icin gelistirilen acik kaynak yonetim aracidir.
 
@@ -19,18 +19,27 @@ Bu proje Apache OFBiz'in resmi dagitimi degildir. Apache OFBiz kaynaklarini, res
 
 ## Tek tik Windows kurulumu
 
-Windows + WSL2 + Docker Desktop kullananlar icin komut yazmak gerekmez.
+Windows + WSL2 + Docker Desktop kullananlar icin onerilen yol paketlenmis launcher'dir.
 
-1. Son release altindaki `TurkuazOFBiz-Installer.bat` dosyasini indirin.
-2. Dosyaya cift tiklayin.
-3. Installer stabil TurkuazOFBiz surumunu hazirlar, Docker Desktop'i gerekirse baslatir ve interaktif OFBiz surum secim menusunu acar.
-4. Release serisi, tam surum ve Demo/Runtime varyanti secilir.
-5. Resmi Docker image varsa cekilir; yoksa desteklenen hedef kaynak koddan local Docker image olarak build edilir.
-6. Secim kaydedilir ve masaustu kisayolu sonraki acilista ayni hedefi baslatir.
+1. Son release altindaki `TurkuazOFBiz-Setup.zip` dosyasini indirin.
+2. ZIP dosyasini normal bir klasore tamamen cikarin.
+3. `TurkuazOFBiz-Launcher.cmd` dosyasina cift tiklayin.
+4. Launcher ayni klasordeki yerel `TurkuazOFBiz-Installer.ps1` dosyasinin Windows internet blokunu kaldirir ve normal PowerShell policy ile calistirir.
+5. Release serisi, tam surum ve Demo/Runtime varyanti menuden secilir.
+6. Resmi Docker image varsa cekilir; yoksa desteklenen hedef kaynak koddan local Docker image olarak build edilir.
+7. Secim kaydedilir ve masaustu kisayolu sonraki acilista ayni hedefi baslatir.
 
 Sabit latest asset:
 
-https://github.com/TurkuazLabs/TurkuazOFBiz/releases/latest/download/TurkuazOFBiz-Installer.bat
+https://github.com/TurkuazLabs/TurkuazOFBiz/releases/latest/download/TurkuazOFBiz-Setup.zip
+
+Checksum:
+
+https://github.com/TurkuazLabs/TurkuazOFBiz/releases/latest/download/TurkuazOFBiz-Setup.zip.sha256
+
+Yeni launcher internetten PowerShell kodu indirmez ve `ExecutionPolicy Bypass` kullanmaz. Hata olursa pencereyi kapatmaz; hata mesaji okunabilsin diye bekler.
+
+Kurumsal bir `MachinePolicy` veya `UserPolicy` `AllSigned` zorluyorsa imzasiz PS1 yine calismaz. Launcher bu politikayi atlatmaya calismaz.
 
 Installer yonetilen proje dosyalarini `%LOCALAPPDATA%\TurkuazOFBiz\repo` altinda tutar ve masaustune TurkuazOFBiz kisayolu olusturur. Bu kisayol normal kullanimda mevcut container'i baslatir; container yoksa kurulumu otomatik yapar.
 

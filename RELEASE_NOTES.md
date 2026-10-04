@@ -1,52 +1,37 @@
 # Dosya Yolu: /RELEASE_NOTES.md
-# Amac: TurkuazOFBiz v1.5.0 GitHub release notlarini hazirlar
+# Amac: TurkuazOFBiz v1.5.1 GitHub release notlarini hazirlar
 # View - Markdown
-# Version: 1.5.0
-# Aciklama: Interaktif coklu OFBiz surum secimli Windows installer'i ozetler
+# Version: 1.5.1
+# Aciklama: Windows installer'i yerel paketlenmis launcher modeline tasir
 #
-# Bagimli Oldugu Katman: View | Tool | Config
+# Bagimli Oldugu Katman: View | Tool
 
-# TurkuazOFBiz v1.5.0
+# TurkuazOFBiz v1.5.1
 
-v1.5.0 Windows installer'i tek sabit OFBiz surumunden interaktif coklu surum yoneticisine donusturur.
+Bu patch Windows'ta PS1 dosyasinin cift tiklandiginda kapanmasi, internetten indirilen script bloklari ve eski BAT bootstrap davranisini duzeltir.
 
-## Surum secim menusu
+## Onerilen Windows kurulumu
 
-Installer parametresiz install action ile acildiginda once hedef ailesini sorar:
+Release altindaki TurkuazOFBiz-Setup.zip dosyasini indirin, normal bir klasore cikarin ve TurkuazOFBiz-Launcher.cmd dosyasina cift tiklayin.
 
-1. Release 24.09
-2. Release 18.12
-3. Release 17.12
-4. Snapshot / branch
+ZIP su dosyalari birlikte tasir:
 
-Release secildiginde config/versions.conf katalogundaki tum desteklenen tam surumler listelenir.
+- TurkuazOFBiz-Launcher.cmd
+- TurkuazOFBiz-Installer.ps1
+- README-FIRST.txt
 
-Snapshot secildiginde:
+Launcher internetten PowerShell kodu indirmez. ExecutionPolicy Bypass kullanmaz.
 
-- trunk
-- release24.09
-- release22.01
+Yerel PS1 icin Windows internet zone blokunu Unblock-File ile kaldirir ve scripti normal PowerShell policy ile calistirir.
 
-sunulur.
+Hata durumunda pencere acik kalir ve hata mesaji okunabilir.
 
-17.12 compat hedeflerinde demo varyanti otomatik secilir. Diger hedeflerde Demo veya Runtime secilebilir.
+## Integrity
 
-## Docker image hazirlama
+Release ayrica TurkuazOFBiz-Setup.zip.sha256 asset'ini yayinlar.
 
-Installer once resmi Apache OFBiz Docker image'ini kullanmayi dener.
+## Policy
 
-Resmi image eslestirmesi veya manifesti yoksa ayni hedef icin kaynak koddan local Docker image build eder. Bu nedenle eski 18.12/17.12 veya release22.01 hedeflerinin ilk kurulumu 24.09 resmi image kurulumundan daha uzun surebilir.
+Kurumsal MachinePolicy veya UserPolicy AllSigned zorluyorsa launcher bunu atlatmaz. Bu durumda Authenticode ile imzali installer gerekir.
 
-## Hedef durumu
-
-Basarili secim su dosyada saklanir:
-
-    %LOCALAPPDATA%\TurkuazOFBiz\installer-state.json
-
-Masaustu TurkuazOFBiz kisayolu sonraki acilista bu hedefi tekrar baslatir.
-
-## Izolasyon
-
-Her hedef ve varyant kendi TurkuazOFBiz container kimligini ve credential dosyasini kullanir. Demo parolasi admin / ofbiz olarak kalir; Runtime varyanti guclu rastgele parola uretir.
-
-Tum hedefler varsayilan olarak 127.0.0.1:8443 kullandigi icin installer secilen hedefi baslatmadan once diger TurkuazOFBiz container'larini durdurur.
+v1.5.0 ile gelen interaktif 24.09 / 18.12 / 17.12 / snapshot secim menusu aynen korunur.
