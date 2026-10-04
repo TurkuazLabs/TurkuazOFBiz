@@ -1,8 +1,8 @@
 # Dosya Yolu: /tools/ci/validate-structure.sh
-# Amac: OFBiz konfigurasyon yapisinin syntax, katman ve resolver testlerini calistirir
+# Amac: TurkuazOFBiz konfigurasyon yapisinin syntax, katman, resolver ve release metadata testlerini calistirir
 # Tool - Shell
-# Version: 1.2.0
-# Aciklama: CI icin ag gerektirmeyen syntax, katman, release/snapshot ve Docker image cozumleme testleri
+# Version: 1.3.0
+# Aciklama: CI icin ag gerektirmeyen syntax, katman, release/snapshot, Docker image ve proje surum testleri
 #
 # Bagimli Oldugu Katman: Tool | Controller | Service | Repo | View | Language | Config
 
@@ -39,6 +39,31 @@ validate_directories() {
     for item in "${required_dirs[@]}"; do
         [[ -d "${OFBIZ_ROOT_DIR}/${item}" ]] || fail "Missing directory: ${item}"
     done
+}
+
+validate_release_metadata() {
+    local required_files=(
+        "LICENSE"
+        "VERSION"
+        "CHANGELOG.md"
+        "RELEASE_NOTES.md"
+    )
+    local item
+    local project_version
+
+    for item in "${required_files[@]}"; do
+        [[ -f "${OFBIZ_ROOT_DIR}/${item}" ]] || fail "Missing release file: ${item}"
+    done
+
+    project_version="$(tr -d '[:space:]' < "${OFBIZ_ROOT_DIR}/VERSION")"
+
+    [[ "${project_version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]         || fail "Invalid VERSION format: ${project_version}"
+
+    grep -Fq "## [${project_version}] - 2026-10-04" "${OFBIZ_ROOT_DIR}/CHANGELOG.md"         || fail "CHANGELOG.md does not contain VERSION ${project_version}"
+
+    grep -Fq "# TurkuazOFBiz v${project_version}" "${OFBIZ_ROOT_DIR}/RELEASE_NOTES.md"         || fail "RELEASE_NOTES.md does not contain VERSION ${project_version}"
+
+    grep -Fq "Apache License" "${OFBIZ_ROOT_DIR}/LICENSE"         || fail "LICENSE is not Apache License 2.0 text"
 }
 
 validate_bash_syntax() {
@@ -103,6 +128,7 @@ validate_controller_readonly_commands() {
 
 main() {
     validate_directories
+    validate_release_metadata
     validate_bash_syntax
     validate_headers
     validate_resolvers

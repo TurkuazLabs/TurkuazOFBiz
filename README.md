@@ -1,12 +1,17 @@
 # Dosya Yolu: /README.md
 # Amac: TurkuazOFBiz projesinin ana giris, kurulum ve kullanim rehberini sunar
 # View - Markdown
-# Version: 3.0.0
+# Version: 3.1.0
 # Aciklama: Apache OFBiz release, snapshot, runtime ve Docker yonetim araclarini tanitir
 #
 # Bagimli Oldugu Katman: View | Controller | Service | Repo | Tool | Language | Config
 
 # TurkuazOFBiz
+
+[![CI](https://github.com/TurkuazLabs/TurkuazOFBiz/actions/workflows/ofbiz-config-ci.yml/badge.svg)](https://github.com/TurkuazLabs/TurkuazOFBiz/actions/workflows/ofbiz-config-ci.yml)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
+
+**Current version:** v1.0.0
 
 TurkuazOFBiz, Apache OFBiz release ve branch tabanli snapshot hedeflerini ayni arabirimden yonetmek icin gelistirilen acik kaynak yonetim aracidir.
 
@@ -106,10 +111,18 @@ ShellCheck
 katman/header testleri
 release/snapshot resolver testleri
 Docker tag resolver testleri
+release metadata tutarliligi
 resmi GHCR manifest kontrolleri
 24.09.07 preloaddemo gercek HTTPS smoke testi
 release22.01 Dockerfile build check
 ~~~
+
+## Proje dosyalari
+
+- CHANGELOG.md: Surum gecmisi.
+- RELEASE_NOTES.md: Guncel stabil surum release notlari.
+- VERSION: Proje surumu.
+- LICENSE: Apache License 2.0.
 
 Detayli kullanim: views/README.md
 
