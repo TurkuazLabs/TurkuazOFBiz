@@ -1,8 +1,8 @@
 # Dosya Yolu: /.github/workflows/release.yml
 # Amac: Basarili main CI sonrasinda VERSION degerinden GitHub tag ve release olusturur
 # Tool - YAML
-# Version: 1.1.0
-# Aciklama: Ayni surum release edilmemisse RELEASE_NOTES.md ile otomatik stabil GitHub Release yayinlar
+# Version: 1.2.0
+# Aciklama: Stabil GitHub Release ile Windows, PowerShell ve Shell installer asset'lerini otomatik yayinlar
 #
 # Bagimli Oldugu Katman: Tool | View | Config
 
@@ -89,7 +89,14 @@ jobs:
         run: |
           set -euo pipefail
 
+          cp install.bat "${RUNNER_TEMP}/TurkuazOFBiz-Installer.bat"
+          cp install.ps1 "${RUNNER_TEMP}/TurkuazOFBiz-Installer.ps1"
+          cp install.sh "${RUNNER_TEMP}/TurkuazOFBiz-Installer.sh"
+
           gh release create "${TAG}" \
+            "${RUNNER_TEMP}/TurkuazOFBiz-Installer.bat" \
+            "${RUNNER_TEMP}/TurkuazOFBiz-Installer.ps1" \
+            "${RUNNER_TEMP}/TurkuazOFBiz-Installer.sh" \
             --repo "${GITHUB_REPOSITORY}" \
             --target "${HEAD_SHA}" \
             --title "TurkuazOFBiz ${TAG}" \

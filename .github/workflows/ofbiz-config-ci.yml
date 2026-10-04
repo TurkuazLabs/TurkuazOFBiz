@@ -1,7 +1,7 @@
 # Dosya Yolu: /.github/workflows/ofbiz-config-ci.yml
 # Amac: TurkuazOFBiz araclarinin statik, release matrisi, doctor ve Docker dogrulamalarini calistirir
 # Tool - YAML
-# Version: 2.8.0
+# Version: 2.9.0
 # Aciklama: Syntax, ShellCheck, release metadata, gercek release/JDK/Gradle matrisi ve Docker testlerini kosar
 #
 # Bagimli Oldugu Katman: Tool | Controller | Service | Repo | Config
@@ -21,6 +21,12 @@ on:
       - "tools/**"
       - "views/**"
       - "README.md"
+      - "install.bat"
+      - "install.ps1"
+      - "install.sh"
+      - "install.bat"
+      - "install.ps1"
+      - "install.sh"
       - "LICENSE"
       - "VERSION"
       - "CHANGELOG.md"
@@ -71,6 +77,32 @@ jobs:
         shell: bash
         run: |
           find controllers services repositories tools             -type f -name '*.sh'             -not -path '*/legacy/*'             -print0             | xargs -0 shellcheck -s bash -S error -e SC1090,SC1091
+
+      - name: Validate shell and batch installers
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash -n install.sh
+          shellcheck -s bash -S error install.sh
+          grep -Fq "TurkuazOFBiz-Installer.ps1" install.bat
+          grep -Fq "releases/latest/download" install.bat
+
+      - name: Validate PowerShell installer
+        shell: pwsh
+        run: |
+          $tokens = $null
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile(
+            (Resolve-Path "install.ps1"),
+            [ref]$tokens,
+            [ref]$errors
+          ) | Out-Null
+
+          if ($errors.Count -gt 0) {
+            $errors | Format-List
+            exit 1
+          }
+
 
   release-runtime-matrix:
     name: Release runtime ${{ matrix.version }} / Java ${{ matrix.java }}

@@ -1,7 +1,7 @@
 # Dosya Yolu: /README.md
 # Amac: TurkuazOFBiz projesinin ana giris, kurulum ve kullanim rehberini sunar
 # View - Markdown
-# Version: 3.5.0
+# Version: 3.6.0
 # Aciklama: Apache OFBiz release, snapshot, runtime ve Docker yonetim araclarini tanitir
 #
 # Bagimli Oldugu Katman: View | Controller | Service | Repo | Tool | Language | Config
@@ -11,13 +11,41 @@
 [![CI](https://github.com/TurkuazLabs/TurkuazOFBiz/actions/workflows/ofbiz-config-ci.yml/badge.svg)](https://github.com/TurkuazLabs/TurkuazOFBiz/actions/workflows/ofbiz-config-ci.yml)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 
-**Current version:** v1.3.0
+**Current version:** v1.4.0
 
 TurkuazOFBiz, Apache OFBiz release ve branch tabanli snapshot hedeflerini ayni arabirimden yonetmek icin gelistirilen acik kaynak yonetim aracidir.
 
 Bu proje Apache OFBiz'in resmi dagitimi degildir. Apache OFBiz kaynaklarini, resmi release paketlerini ve resmi container image'larini kullanir.
 
-## Hizli baslangic
+## Tek tik Windows kurulumu
+
+Windows + WSL2 + Docker Desktop kullananlar icin komut yazmak gerekmez.
+
+1. Son release altindaki `TurkuazOFBiz-Installer.bat` dosyasini indirin.
+2. Dosyaya cift tiklayin.
+3. Installer stabil TurkuazOFBiz surumunu hazirlar, Docker Desktop'i gerekirse baslatir, Ubuntu WSL dagitimini secer, OFBiz 24.09.07 demo image'ini ceker, guclu admin parolasi uretir ve tarayiciyi acar.
+
+Sabit latest asset:
+
+https://github.com/TurkuazLabs/TurkuazOFBiz/releases/latest/download/TurkuazOFBiz-Installer.bat
+
+Installer yonetilen proje dosyalarini `%LOCALAPPDATA%\TurkuazOFBiz\repo` altinda tutar ve masaustune TurkuazOFBiz kisayolu olusturur.
+
+Varsayilan adres:
+
+~~~text
+https://localhost:8443/
+~~~
+
+Admin parolasi otomatik uretilir ve sadece kullanici profilinde saklanir.
+
+## Linux / WSL tek komut
+
+~~~bash
+curl -fsSL https://raw.githubusercontent.com/TurkuazLabs/TurkuazOFBiz/main/install.sh | bash
+~~~
+
+## Gelistirici hizli baslangic
 
 ~~~bash
 git clone https://github.com/TurkuazLabs/TurkuazOFBiz.git
@@ -152,6 +180,9 @@ release24.09 + Temurin 17 + snapshot-service install/Gradle testi
 resmi GHCR manifest kontrolleri
 24.09.07 preloaddemo gercek HTTPS smoke testi
 release22.01 Dockerfile build check
+Windows PowerShell installer parser testi
+Linux installer Bash + ShellCheck testi
+Release installer asset kontrolu
 ~~~
 
 ## Proje dosyalari

@@ -1,7 +1,7 @@
 # Dosya Yolu: /CHANGELOG.md
 # Amac: TurkuazOFBiz surumlerindeki kullaniciya donuk degisiklikleri kaydeder
 # View - Markdown
-# Version: 1.3.0
+# Version: 1.4.0
 # Aciklama: Semantic versioning tabanli proje degisiklik gecmisi
 #
 # Bagimli Oldugu Katman: View
@@ -11,6 +11,34 @@
 Tum dikkat cekici TurkuazOFBiz degisiklikleri bu dosyada kaydedilir.
 
 Surumleme Semantic Versioning mantigini izler.
+
+## [1.4.0] - 2026-10-04
+
+### Added
+
+- Windows icin cift tiklanabilir install.bat bootstrap installer.
+- Windows PowerShell install.ps1 yoneticisi.
+- Linux ve WSL icin install.sh installer.
+- Windows installer icinde WSL dagitimi otomatik secimi.
+- Docker Desktop kapaliysa otomatik baslatma ve WSL Docker readiness kontrolu.
+- Stabil TurkuazOFBiz GitHub Release arsivini otomatik indirme ve yonetilen repo dizini.
+- OFBiz 24.09.07 demo image pull/run otomasyonu.
+- Guclu admin parolasini otomatik uretme ve kullanici profilinde saklama.
+- Windows masaustu TurkuazOFBiz kisayolu.
+- Installer start, stop, status, doctor ve open action'lari.
+- Her GitHub Release icin indirilebilir BAT, PS1 ve SH installer asset'leri.
+
+### Changed
+
+- Windows son kullanici akisi CLI komutlari yerine tek BAT dosyasina indirildi.
+- Release workflow installer asset'lerini GitHub Release'e ekler.
+- CI PowerShell parser, Bash syntax, ShellCheck ve BAT latest-asset referanslarini dogrular.
+
+### Verified
+
+- install.sh Bash syntax kontrolu basarili.
+- Installer dosyalari release CI kapsaminda test edilir.
+- Mevcut atomik release/snapshot, Doctor ve Docker testleri korunur.
 
 ## [1.3.0] - 2026-10-04
 

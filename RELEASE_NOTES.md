@@ -1,48 +1,55 @@
 # Dosya Yolu: /RELEASE_NOTES.md
-# Amac: TurkuazOFBiz v1.3.0 GitHub release notlarini hazirlar
+# Amac: TurkuazOFBiz v1.4.0 GitHub release notlarini hazirlar
 # View - Markdown
-# Version: 1.3.0
-# Aciklama: Atomik release/snapshot kurulum ve metadata dogrulama modelini ozetler
+# Version: 1.4.0
+# Aciklama: Tek tik Windows, PowerShell ve Linux installer deneyimini ozetler
 #
-# Bagimli Oldugu Katman: View
+# Bagimli Oldugu Katman: View | Tool
 
-# TurkuazOFBiz v1.3.0
+# TurkuazOFBiz v1.4.0
 
-v1.3.0 release ve snapshot kurulumlarini yarim kalmis filesystem durumlarina karsi sertlestirir.
+v1.4.0 son kullanici kurulumunu komut satirindan tek tik installer modeline tasir.
 
-## Atomic install model
+## Windows
 
-Yeni kurulum veya reinstall once hedef klasore yazmak yerine ayni parent filesystem altinda gecici staging dizininde hazirlanir.
+Release asset olarak TurkuazOFBiz-Installer.bat dosyasini indirin ve cift tiklayin.
 
-Staging tamamlanmadan hedef degistirilmez. Basarili staging icin su kosullar dogrulanir:
+Installer otomatik olarak:
 
-- gradlew mevcut ve executable.
-- .ofbiz-meta mevcut.
-- type dogru.
-- identifier dogru.
-- Java major dogru.
-- Snapshot icin .git repository mevcut.
+- En son stabil TurkuazOFBiz release'ini bulur.
+- Projeyi LOCALAPPDATA altinda yonetir.
+- Ubuntu-24.04 veya uygun WSL dagitimini secer.
+- Docker Desktop kapaliysa baslatmayi dener.
+- Docker'in WSL icinden hazir olmasini kontrol eder.
+- OFBiz 24.09.07 demo image'ini ceker.
+- Guclu admin parolasi uretir ve kullanici profilinde saklar.
+- Container'i 127.0.0.1:8443 adresinde baslatir.
+- Masaustune TurkuazOFBiz kisayolu olusturur.
+- Tarayicida https://localhost:8443/ adresini acar.
 
-Dogrulama basarili olduktan sonra staging runtime hedef dizine tasinir.
+Varsayilan kullanici admin'dir. Uretilen parola installer sonucunda ekranda ve kullanici profilindeki parola dosyasinda gosterilir.
 
-Mevcut hedef varsa replacement sirasinda gecici backup tutulur. Yeni dizinin tasinmasi basarisiz olursa eski hedef restore edilmeye calisilir.
+## Linux / WSL
 
-## Release behavior
+install.sh ayni Docker akisini Linux ve WSL icin sunar.
 
-Yarim kalmis bir release klasoru artik kurulu sayilmaz. Normal install bu hedefi yeniden hazirlar.
+Desteklenen action'lar:
 
-Force reinstall yeni staging hazir olmadan mevcut saglam release'i silmez.
+- install
+- start
+- stop
+- status
+- doctor
+- open
 
-## Snapshot behavior
+## Release assets
 
-Snapshot install ayni atomik staging modelini kullanir.
+Her stabil release su dosyalari yayinlar:
 
-Snapshot update mevcut checkout'u yerinde degistirmek yerine branch'i yeniden staging'e clone eder, hazirlar ve dogrulama sonrasi hedefi degistirir.
+- TurkuazOFBiz-Installer.bat
+- TurkuazOFBiz-Installer.ps1
+- TurkuazOFBiz-Installer.sh
 
-## CI
+## Requirements
 
-- 17.12.09, 18.12.19 ve 24.09.07 release matrisi artik release-service ile gercek install akisini test eder.
-- Idempotent ikinci install aktivasyonu test edilir.
-- release24.09 snapshot install gercek snapshot-service, Git clone, Temurin 17 ve Gradle help ile test edilir.
-- Repository staging/replacement ve metadata validation yardimcilari ag gerektirmeyen testlerle kontrol edilir.
-- Doctor ve Docker smoke testleri korunur.
+Windows installer WSL2 Linux dagitimi ve Docker Desktop bekler. Mevcut TurkuazOFBiz komutlari ileri seviye ve manuel kullanim icin korunur.
