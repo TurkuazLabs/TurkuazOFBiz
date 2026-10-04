@@ -1,7 +1,7 @@
 # Dosya Yolu: /.github/workflows/ofbiz-config-ci.yml
 # Amac: TurkuazOFBiz araclarinin statik, release matrisi, doctor ve Docker dogrulamalarini calistirir
 # Tool - YAML
-# Version: 2.4.0
+# Version: 2.5.0
 # Aciklama: Syntax, ShellCheck, release metadata, gercek release/JDK/Gradle matrisi ve Docker testlerini kosar
 #
 # Bagimli Oldugu Katman: Tool | Controller | Service | Repo | Config
@@ -147,6 +147,30 @@ jobs:
       - name: Run full doctor
         shell: bash
         run: bash controllers/ofbiz.sh doctor all latest
+
+  legacy-docker-smoke:
+    name: Legacy Docker 17.12.09 / Java 8
+    needs: validate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build 17.12.09 compat runtime image
+        shell: bash
+        run: bash controllers/ofbiz.sh docker build release 17.12.09 runtime
+
+      - name: Verify compat image Java
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          IMAGE="local/ofbiz:release-17.12.09-runtime"
+
+          docker image inspect "$IMAGE" >/dev/null
+          docker run --rm --entrypoint java "$IMAGE" -version 2>&1 | tee "$RUNNER_TEMP/java-version.txt"
+          grep -Eq '1\.8\.0|version "1\.8' "$RUNNER_TEMP/java-version.txt"
 
   docker-smoke:
     name: Docker smoke 24.09.07

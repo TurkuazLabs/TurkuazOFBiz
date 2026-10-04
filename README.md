@@ -133,6 +133,7 @@ doctor ag/sistem smoke kontrolleri
 17.12.09 + Temurin 8 + Gradle runtime testi
 18.12.19 + Temurin 8 + Gradle runtime testi
 24.09.07 + Temurin 17 + Gradle runtime testi
+17.12.09 Dockerfile.compat + Java 8 image testi
 resmi GHCR manifest kontrolleri
 24.09.07 preloaddemo gercek HTTPS smoke testi
 release22.01 Dockerfile build check

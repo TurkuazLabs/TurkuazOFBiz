@@ -26,4 +26,4 @@ Resmi Dockerfile mevcutsa Apache'in kendi Dockerfile'i degistirilmeden kullanilm
 
 ## Validation
 
-CI Docker Java mapping'lerini statik olarak kontrol eder ve mevcut release runtime matrisi, Doctor ve Docker smoke testleri korunur.
+CI Docker Java mapping'lerini statik olarak kontrol eder. Ayrica 17.12.09 icin gercek Dockerfile.compat runtime image build edilir ve image icindeki Java'nin 1.8 oldugu dogrulanir. Mevcut release runtime matrisi, Doctor ve modern Docker smoke testleri de korunur.

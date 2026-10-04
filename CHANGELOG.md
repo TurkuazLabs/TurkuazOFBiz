@@ -19,6 +19,7 @@ Surumleme Semantic Versioning mantigini izler.
 - Dockerfile.compat kullanan eski release build'lerinde Java major artik release/snapshot resolver'dan Docker build arg olarak aktarilir.
 - 17.12.x local Docker build'inin yanlislikla varsayilan Java 17 kullanmasi engellendi.
 - Compat Docker build yolu 17.12=Java 8, 18.12=Java 8 ve 24.09/snapshot=Java 17 olarak statik CI testleriyle sabitlendi.
+- CI artik 17.12.09 icin gercek Dockerfile.compat runtime image build eder ve image icindeki Java 8 surumunu dogrular.
 
 ### Verified
 
