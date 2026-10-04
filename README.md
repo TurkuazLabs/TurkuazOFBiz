@@ -1,7 +1,7 @@
 # Dosya Yolu: /README.md
 # Amac: TurkuazOFBiz projesinin ana giris, kurulum ve kullanim rehberini sunar
 # View - Markdown
-# Version: 3.10.0
+# Version: 3.11.0
 # Aciklama: Apache OFBiz release, snapshot, runtime ve Docker yonetim araclarini tanitir
 #
 # Bagimli Oldugu Katman: View | Controller | Service | Repo | Tool | Language | Config
@@ -11,77 +11,61 @@
 [![CI](https://github.com/TurkuazLabs/TurkuazOFBiz/actions/workflows/ofbiz-config-ci.yml/badge.svg)](https://github.com/TurkuazLabs/TurkuazOFBiz/actions/workflows/ofbiz-config-ci.yml)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 
-**Current version:** v1.5.1
+**Current version:** v1.6.0
 
 TurkuazOFBiz, Apache OFBiz release ve branch tabanli snapshot hedeflerini ayni arabirimden yonetmek icin gelistirilen acik kaynak yonetim aracidir.
 
 Bu proje Apache OFBiz'in resmi dagitimi degildir. Apache OFBiz kaynaklarini, resmi release paketlerini ve resmi container image'larini kullanir.
 
-## Tek tik Windows kurulumu
+## Windows Portable - onerilen kullanim
 
-Windows + WSL2 + Docker Desktop kullananlar icin onerilen yol paketlenmis launcher'dir.
+TurkuazOFBiz'in ana Windows dagitim modeli v1.6.0 ile portable pakettir. Docker, WSL, sistem Java kurulumu veya PowerShell script calistirma izni gerekmez.
 
-1. Son release altindaki `TurkuazOFBiz-Setup.zip` dosyasini indirin.
-2. ZIP dosyasini normal bir klasore tamamen cikarin.
-3. `TurkuazOFBiz-Launcher.cmd` dosyasina cift tiklayin.
-4. Launcher ayni klasordeki yerel `TurkuazOFBiz-Installer.ps1` dosyasinin Windows internet blokunu kaldirir ve normal PowerShell policy ile calistirir.
-5. Release serisi, tam surum ve Demo/Runtime varyanti menuden secilir.
-6. Resmi Docker image varsa cekilir; yoksa desteklenen hedef kaynak koddan local Docker image olarak build edilir.
-7. Secim kaydedilir ve masaustu kisayolu sonraki acilista ayni hedefi baslatir.
-
-Sabit latest asset:
-
-https://github.com/TurkuazLabs/TurkuazOFBiz/releases/latest/download/TurkuazOFBiz-Setup.zip
-
-Checksum:
-
-https://github.com/TurkuazLabs/TurkuazOFBiz/releases/latest/download/TurkuazOFBiz-Setup.zip.sha256
-
-Yeni launcher internetten PowerShell kodu indirmez ve `ExecutionPolicy Bypass` kullanmaz. Hata olursa pencereyi kapatmaz; hata mesaji okunabilsin diye bekler.
-
-Kurumsal bir `MachinePolicy` veya `UserPolicy` `AllSigned` zorluyorsa imzasiz PS1 yine calismaz. Launcher bu politikayi atlatmaya calismaz.
-
-Installer yonetilen proje dosyalarini `%LOCALAPPDATA%\TurkuazOFBiz\repo` altinda tutar ve masaustune TurkuazOFBiz kisayolu olusturur. Bu kisayol normal kullanimda mevcut container'i baslatir; container yoksa kurulumu otomatik yapar.
-
-Varsayilan uygulama adresi:
+Release iki paket uretir:
 
 ~~~text
-https://localhost:8443/partymgr
+TurkuazOFBiz-Portable-24.09.07-Demo-win-x64.zip
+TurkuazOFBiz-Portable-24.09.07-Runtime-win-x64.zip
 ~~~
 
-Installer container'i baslattiktan sonra bu endpoint 2xx/3xx cevap verene kadar bekler ve sonra tarayiciyi acar.
-
-Windows installer su hedefleri menuden sunar:
-
-~~~text
-Release 24.09 : 24.09.01 - 24.09.07
-Release 18.12 : 18.12.01 - 18.12.19
-Release 17.12 : 17.12.01 - 17.12.09
-Snapshot      : trunk, release24.09, release22.01
-~~~
-
-17.12 compat Docker yolu demo varyantiyla calisir. Diger hedeflerde Demo veya Runtime secilebilir. Farkli hedef/varyant container ve parola bilgileri birbirinden ayrilir; ayni 8443 portu kullanildigi icin installer secilen hedefi baslatirken diger TurkuazOFBiz container'larini durdurur.
-
-Son secim burada tutulur:
-
-~~~text
-%LOCALAPPDATA%\TurkuazOFBiz\installer-state.json
-~~~
-
-Varsayilan demo image resmi Apache demo verisini kullanir. Demo girisi:
+Demo paketi Apache OFBiz demo verisini onceden tasir. Ilk giris:
 
 ~~~text
 Kullanici: admin
 Parola: ofbiz
 ~~~
 
-Demo varyantinda parola dosyasi bu degerle senkronize edilir. Runtime varyantinda ise guclu rastgele admin parolasi otomatik uretilir ve kullanici profilinde saklanir.
+Runtime paketi seed verisini onceden tasir. Ilk `Start.cmd` calismasinda paket icindeki Java helper SecureRandom ile benzersiz admin parolasi ve shutdown anahtari uretir. Ilk parola `data\initial-admin-password.txt` dosyasinda tutulur ve OFBiz ilk giriste parola degisikligi isteyebilir.
 
-Windows installer ile parolayi tekrar gormek icin:
+Kullanim:
 
-~~~powershell
-.\TurkuazOFBiz-Installer.ps1 -Action password
+1. ZIP'i bosluk icermeyen bir klasore tamamen cikarin. Ornek: `C:\TurkuazOFBiz` veya `E:\Apps\TurkuazOFBiz`.
+2. `TurkuazOFBiz.cmd` dosyasina cift tiklayin.
+3. Menuden Baslat, Durdur, Durum, Tarayicida Ac veya Ilk Admin Bilgisi secin.
+
+Portable klasor:
+
+~~~text
+TurkuazOFBiz-Portable-24.09.07-...\
+  TurkuazOFBiz.cmd
+  Start.cmd
+  Stop.cmd
+  Status.cmd
+  Open.cmd
+  Credentials.cmd
+  java\
+  ofbiz\
+  data\
+  tools\
 ~~~
+
+Paket kendi Temurin JDK 17 runtime'ini tasir. Apache OFBiz `distZip` dagitimi kullanilir; Demo/Runtime verisi release CI sirasinda Windows runner'da preload edilir. Release yayinlanmadan once her iki paket de bundled Java ile gercek `https://localhost:8443/partymgr` smoke testinden gecirilir.
+
+### Docker / WSL - opsiyonel
+
+Docker tabanli installer korunur ancak artik alternatif calisma modudur. Son release altindaki `TurkuazOFBiz-Setup.zip` paketi WSL2 + Docker Desktop kullananlar icindir.
+
+Docker launcher internetten PowerShell kodu indirmez ve `ExecutionPolicy Bypass` kullanmaz; ancak sistem policy'si imzasiz PowerShell'i tamamen kapatiyorsa portable Windows paketi tercih edilmelidir.
 
 ## Linux / WSL tek komut
 

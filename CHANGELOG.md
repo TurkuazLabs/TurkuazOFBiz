@@ -1,7 +1,7 @@
 # Dosya Yolu: /CHANGELOG.md
 # Amac: TurkuazOFBiz surumlerindeki kullaniciya donuk degisiklikleri kaydeder
 # View - Markdown
-# Version: 1.5.1
+# Version: 1.6.0
 # Aciklama: Semantic versioning tabanli proje degisiklik gecmisi
 #
 # Bagimli Oldugu Katman: View
@@ -11,6 +11,34 @@
 Tum dikkat cekici TurkuazOFBiz degisiklikleri bu dosyada kaydedilir.
 
 Surumleme Semantic Versioning mantigini izler.
+
+## [1.6.0] - 2026-10-05
+
+### Added
+
+- Native Windows x64 portable dagitim modeli.
+- Temurin JDK 17'nin portable paket icine gomulmesi; sistem Java kurulumu gerekmez.
+- Apache OFBiz 24.09.07 distZip tabanli portable runtime.
+- Ayri Demo ve Runtime portable ZIP paketleri.
+- TurkuazOFBiz.cmd ana menu: Baslat, Durdur, Durum, Tarayicida Ac ve Ilk Admin Bilgisi.
+- Start.cmd, Stop.cmd, Status.cmd, Open.cmd ve Credentials.cmd.
+- SecureRandom tabanli PortableBootstrap Java helper.
+- Runtime paketinde ilk calistirmada benzersiz admin parolasi ve shutdown anahtari.
+- Demo/Runtime verisinin Windows release runner'da preload edilmesi.
+- Her portable ZIP icin SHA-256 release asset'i.
+- Release oncesi Demo ve Runtime portable gercek HTTPS smoke testi.
+
+### Changed
+
+- Windows icin onerilen ana dagitim Docker/WSL installer'dan native portable ZIP modeline tasindi.
+- Docker/WSL installer opsiyonel alternatif olarak korunur.
+- Portable runtime PowerShell Execution Policy, Docker Desktop ve WSL'den bagimsizdir.
+
+### Security
+
+- Runtime portable public release icine sabit production admin parolasi gomulmez.
+- Her cikartilan Runtime klasoru ilk baslatmada yerel guclu parola ve shutdown anahtari uretir.
+- JWT/login secret degerleri portable klasor icinde ilk calistirmada benzersiz olusturulur.
 
 ## [1.5.1] - 2026-10-04
 

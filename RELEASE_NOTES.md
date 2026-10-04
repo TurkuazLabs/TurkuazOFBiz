@@ -1,37 +1,79 @@
 # Dosya Yolu: /RELEASE_NOTES.md
-# Amac: TurkuazOFBiz v1.5.1 GitHub release notlarini hazirlar
+# Amac: TurkuazOFBiz v1.6.0 GitHub release notlarini hazirlar
 # View - Markdown
-# Version: 1.5.1
-# Aciklama: Windows installer'i yerel paketlenmis launcher modeline tasir
+# Version: 1.6.0
+# Aciklama: Native Windows portable OFBiz dagitim modelini tanitir
 #
-# Bagimli Oldugu Katman: View | Tool
+# Bagimli Oldugu Katman: View | Tool | Config
 
-# TurkuazOFBiz v1.5.1
+# TurkuazOFBiz v1.6.0
 
-Bu patch Windows'ta PS1 dosyasinin cift tiklandiginda kapanmasi, internetten indirilen script bloklari ve eski BAT bootstrap davranisini duzeltir.
+v1.6.0 ile Windows icin ana kullanim modeli native portable OFBiz paketine tasindi.
 
-## Onerilen Windows kurulumu
+## Portable paketler
 
-Release altindaki TurkuazOFBiz-Setup.zip dosyasini indirin, normal bir klasore cikarin ve TurkuazOFBiz-Launcher.cmd dosyasina cift tiklayin.
+- TurkuazOFBiz-Portable-24.09.07-Demo-win-x64.zip
+- TurkuazOFBiz-Portable-24.09.07-Runtime-win-x64.zip
 
-ZIP su dosyalari birlikte tasir:
+Her ZIP kendi SHA-256 dosyasi ile yayinlanir.
 
-- TurkuazOFBiz-Launcher.cmd
-- TurkuazOFBiz-Installer.ps1
-- README-FIRST.txt
+## Ne gerekmez?
 
-Launcher internetten PowerShell kodu indirmez. ExecutionPolicy Bypass kullanmaz.
+Portable pakette:
 
-Yerel PS1 icin Windows internet zone blokunu Unblock-File ile kaldirir ve scripti normal PowerShell policy ile calistirir.
+- Docker Desktop gerekmez.
+- WSL gerekmez.
+- Windows'a Java kurmak gerekmez.
+- PowerShell script execution policy degistirmek gerekmez.
+- Registry kurulumu gerekmez.
 
-Hata durumunda pencere acik kalir ve hata mesaji okunabilir.
+Temurin JDK 17 paket icindedir.
 
-## Integrity
+## Kullanici arayuzu
 
-Release ayrica TurkuazOFBiz-Setup.zip.sha256 asset'ini yayinlar.
+ZIP'i bosluk icermeyen bir klasore cikarin ve TurkuazOFBiz.cmd dosyasina cift tiklayin.
 
-## Policy
+Menu:
 
-Kurumsal MachinePolicy veya UserPolicy AllSigned zorluyorsa launcher bunu atlatmaz. Bu durumda Authenticode ile imzali installer gerekir.
+1. Baslat
+2. Durdur
+3. Durum
+4. Tarayicida Ac
+5. Ilk Admin Bilgisi
 
-v1.5.0 ile gelen interaktif 24.09 / 18.12 / 17.12 / snapshot secim menusu aynen korunur.
+## Demo
+
+Demo verisi release CI sirasinda onceden yuklenir.
+
+Ilk giris:
+
+    admin / ofbiz
+
+## Runtime
+
+Runtime seed verisi release CI sirasinda onceden yuklenir.
+
+Ilk Start.cmd calismasinda paket icindeki Java helper SecureRandom ile:
+
+- benzersiz admin parolasi,
+- benzersiz OFBiz shutdown anahtari,
+- benzersiz login/JWT secret degerleri
+
+uretir.
+
+Ilk admin parolasi data\initial-admin-password.txt dosyasina yazilir.
+
+## Release dogrulamasi
+
+GitHub Release yayinlanmadan once Windows runner:
+
+- Apache 24.09.07 ZIP SHA-512 dogrulamasi yapar,
+- distZip uretir,
+- Temurin JDK 17'yi pakete koyar,
+- Demo ve Runtime verisini preload eder,
+- iki ZIP'i de acar,
+- bundled Java ile Start.cmd calistirir,
+- https://localhost:8443/partymgr endpoint'ini dogrular,
+- Stop.cmd ile OFBiz'i kapatir.
+
+Docker/WSL installer v1.6.0'da opsiyonel alternatif olarak korunur.

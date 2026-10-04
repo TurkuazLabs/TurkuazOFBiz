@@ -1,12 +1,37 @@
 # Dosya Yolu: /views/README.md
 # Amac: Apache OFBiz release, snapshot, runtime ve Docker kullanimini aciklar
 # View - Markdown
-# Version: 4.1.0
+# Version: 4.2.0
 # Aciklama: Release/snapshot kurulumlari ile resmi ve local Docker image akislarini dokumante eder
 #
 # Bagimli Oldugu Katman: View | Controller | Service | Repo | Tool | Config
 
 # Apache OFBiz Version Manager
+
+## Windows Portable
+
+v1.6.0 ile Windows icin birincil dagitim native portable pakettir.
+
+~~~text
+TurkuazOFBiz-Portable-24.09.07-Demo-win-x64.zip
+TurkuazOFBiz-Portable-24.09.07-Runtime-win-x64.zip
+~~~
+
+Paket icinde Apache OFBiz distZip runtime, Temurin JDK 17 ve CMD yonetim araclari bulunur. Docker, WSL veya sistem Java kurulumu gerekmez.
+
+~~~text
+TurkuazOFBiz.cmd
+Start.cmd
+Stop.cmd
+Status.cmd
+Open.cmd
+Credentials.cmd
+~~~
+
+Demo verisi release sirasinda preload edilir ve admin / ofbiz ile acilir. Runtime seed verisi preload edilir; ilk Start.cmd calismasinda PortableBootstrap benzersiz admin parolasi ve shutdown anahtari uretir.
+
+Apache OFBiz Windows kisiti nedeniyle portable klasor yolu bosluk icermemelidir.
+
 
 ## Release
 

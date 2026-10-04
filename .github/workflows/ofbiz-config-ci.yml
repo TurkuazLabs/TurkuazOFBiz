@@ -1,7 +1,7 @@
 # Dosya Yolu: /.github/workflows/ofbiz-config-ci.yml
 # Amac: TurkuazOFBiz araclarinin statik, release matrisi, doctor ve Docker dogrulamalarini calistirir
 # Tool - YAML
-# Version: 2.13.0
+# Version: 2.14.0
 # Aciklama: Syntax, ShellCheck, release metadata, gercek release/JDK/Gradle matrisi ve Docker testlerini kosar
 #
 # Bagimli Oldugu Katman: Tool | Controller | Service | Repo | Config
@@ -112,21 +112,38 @@ jobs:
           grep -Fq 'installer-state.json' install.ps1
           grep -Fq 'turkuazofbiz-$Variant-$TargetType-$safeTarget' install.ps1
           grep -Fq 'docker build' install.ps1
+          test -f tools/portable/PortableBootstrap.java
+          test -f tools/portable/windows/TurkuazOFBiz.cmd
+          test -f tools/portable/windows/Start.cmd
+          test -f tools/portable/windows/Stop.cmd
+          test -f tools/portable/windows/Status.cmd
+          grep -Fq 'SecureRandom' tools/portable/PortableBootstrap.java
+          grep -Fq 'TurkuazOFBiz-PortableHelper.jar' tools/portable/windows/Start.cmd
+          grep -Fq 'ofbiz.admin.key' tools/portable/windows/_env.cmd tools/portable/windows/Start.cmd || true
+          grep -Fq 'distZip' tools/portable/build-windows-portable.ps1
+          grep -Fq 'readers=seed,seed-initial' tools/portable/build-windows-portable.ps1
 
-      - name: Validate PowerShell installer
+      - name: Validate PowerShell tools
         shell: pwsh
         run: |
-          $tokens = $null
-          $errors = $null
-          [System.Management.Automation.Language.Parser]::ParseFile(
-            (Resolve-Path "install.ps1"),
-            [ref]$tokens,
-            [ref]$errors
-          ) | Out-Null
+          foreach ($path in @(
+            "install.ps1",
+            "tools/portable/build-windows-portable.ps1",
+            "tools/portable/test-windows-portable.ps1"
+          )) {
+            $tokens = $null
+            $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile(
+              (Resolve-Path $path),
+              [ref]$tokens,
+              [ref]$errors
+            ) | Out-Null
 
-          if ($errors.Count -gt 0) {
-            $errors | Format-List
-            exit 1
+            if ($errors.Count -gt 0) {
+              Write-Host "Parser errors in $path"
+              $errors | Format-List
+              exit 1
+            }
           }
 
       - name: Validate packaged Windows installer
