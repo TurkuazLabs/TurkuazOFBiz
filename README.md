@@ -1,7 +1,7 @@
 # Dosya Yolu: /README.md
 # Amac: TurkuazOFBiz projesinin ana giris, kurulum ve kullanim rehberini sunar
 # View - Markdown
-# Version: 3.6.0
+# Version: 3.6.1
 # Aciklama: Apache OFBiz release, snapshot, runtime ve Docker yonetim araclarini tanitir
 #
 # Bagimli Oldugu Katman: View | Controller | Service | Repo | Tool | Language | Config
@@ -11,7 +11,7 @@
 [![CI](https://github.com/TurkuazLabs/TurkuazOFBiz/actions/workflows/ofbiz-config-ci.yml/badge.svg)](https://github.com/TurkuazLabs/TurkuazOFBiz/actions/workflows/ofbiz-config-ci.yml)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 
-**Current version:** v1.4.0
+**Current version:** v1.4.1
 
 TurkuazOFBiz, Apache OFBiz release ve branch tabanli snapshot hedeflerini ayni arabirimden yonetmek icin gelistirilen acik kaynak yonetim aracidir.
 
@@ -29,7 +29,7 @@ Sabit latest asset:
 
 https://github.com/TurkuazLabs/TurkuazOFBiz/releases/latest/download/TurkuazOFBiz-Installer.bat
 
-Installer yonetilen proje dosyalarini `%LOCALAPPDATA%\TurkuazOFBiz\repo` altinda tutar ve masaustune TurkuazOFBiz kisayolu olusturur.
+Installer yonetilen proje dosyalarini `%LOCALAPPDATA%\TurkuazOFBiz\repo` altinda tutar ve masaustune TurkuazOFBiz kisayolu olusturur. Bu kisayol normal kullanimda mevcut container'i baslatir; container yoksa kurulumu otomatik yapar.
 
 Varsayilan adres:
 

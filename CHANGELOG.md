@@ -1,7 +1,7 @@
 # Dosya Yolu: /CHANGELOG.md
 # Amac: TurkuazOFBiz surumlerindeki kullaniciya donuk degisiklikleri kaydeder
 # View - Markdown
-# Version: 1.4.0
+# Version: 1.4.1
 # Aciklama: Semantic versioning tabanli proje degisiklik gecmisi
 #
 # Bagimli Oldugu Katman: View
@@ -11,6 +11,14 @@
 Tum dikkat cekici TurkuazOFBiz degisiklikleri bu dosyada kaydedilir.
 
 Surumleme Semantic Versioning mantigini izler.
+
+## [1.4.1] - 2026-10-04
+
+### Fixed
+
+- Windows masaustu kisayolu artik install yerine start action ile acilir.
+- Mevcut container varsa yalnizca baslatilir ve tarayici acilir.
+- Container yoksa start action mevcut installer davranisiyla otomatik kuruluma geri doner.
 
 ## [1.4.0] - 2026-10-04
 

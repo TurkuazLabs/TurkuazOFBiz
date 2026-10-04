@@ -1,55 +1,24 @@
 # Dosya Yolu: /RELEASE_NOTES.md
-# Amac: TurkuazOFBiz v1.4.0 GitHub release notlarini hazirlar
+# Amac: TurkuazOFBiz v1.4.1 GitHub release notlarini hazirlar
 # View - Markdown
-# Version: 1.4.0
-# Aciklama: Tek tik Windows, PowerShell ve Linux installer deneyimini ozetler
+# Version: 1.4.1
+# Aciklama: Windows masaustu kisayolunun start davranisini duzeltir
 #
 # Bagimli Oldugu Katman: View | Tool
 
-# TurkuazOFBiz v1.4.0
+# TurkuazOFBiz v1.4.1
 
-v1.4.0 son kullanici kurulumunu komut satirindan tek tik installer modeline tasir.
+Bu patch surumu Windows tek tik kullanimini duzeltir.
 
-## Windows
+## Fixed
 
-Release asset olarak TurkuazOFBiz-Installer.bat dosyasini indirin ve cift tiklayin.
+Kurulum sonrasi olusturulan masaustu TurkuazOFBiz kisayolu artik install action yerine start action ile calisir.
 
-Installer otomatik olarak:
+Bunun sonucu:
 
-- En son stabil TurkuazOFBiz release'ini bulur.
-- Projeyi LOCALAPPDATA altinda yonetir.
-- Ubuntu-24.04 veya uygun WSL dagitimini secer.
-- Docker Desktop kapaliysa baslatmayi dener.
-- Docker'in WSL icinden hazir olmasini kontrol eder.
-- OFBiz 24.09.07 demo image'ini ceker.
-- Guclu admin parolasi uretir ve kullanici profilinde saklar.
-- Container'i 127.0.0.1:8443 adresinde baslatir.
-- Masaustune TurkuazOFBiz kisayolu olusturur.
-- Tarayicida https://localhost:8443/ adresini acar.
+- Mevcut OFBiz container zaten varsa yeniden kurulum yapilmaz.
+- Durdurulmus container baslatilir.
+- Tarayici otomatik acilir.
+- Container henuz yoksa start action otomatik olarak tam kuruluma geri doner.
 
-Varsayilan kullanici admin'dir. Uretilen parola installer sonucunda ekranda ve kullanici profilindeki parola dosyasinda gosterilir.
-
-## Linux / WSL
-
-install.sh ayni Docker akisini Linux ve WSL icin sunar.
-
-Desteklenen action'lar:
-
-- install
-- start
-- stop
-- status
-- doctor
-- open
-
-## Release assets
-
-Her stabil release su dosyalari yayinlar:
-
-- TurkuazOFBiz-Installer.bat
-- TurkuazOFBiz-Installer.ps1
-- TurkuazOFBiz-Installer.sh
-
-## Requirements
-
-Windows installer WSL2 Linux dagitimi ve Docker Desktop bekler. Mevcut TurkuazOFBiz komutlari ileri seviye ve manuel kullanim icin korunur.
+Ilk kurulum icin yine TurkuazOFBiz-Installer.bat dosyasina cift tiklamak yeterlidir.
