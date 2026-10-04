@@ -1,7 +1,7 @@
 # Dosya Yolu: /tools/portable/build-windows-portable.ps1
 # Amac: Apache OFBiz ve Temurin JDK iceren Windows x64 portable release paketlerini uretir
 # Tool - PowerShell
-# Version: 1.0.0
+# Version: 1.0.1
 # Aciklama: Apache release checksum dogrular, distZip olusturur, Demo/Runtime verisini preload eder ve portable ZIP/SHA-256 uretir
 #
 # Bagimli Oldugu Katman: Tool | Config | View
@@ -63,12 +63,24 @@ function Verify-ApacheChecksum {
 
     $checksumText = Get-Content -Path $ChecksumFile -Raw
     $match = [regex]::Match($checksumText, "(?i)[a-f0-9]{128}")
+    $expected = ""
 
-    if (-not $match.Success) {
+    if ($match.Success) {
+        $expected = $match.Value.ToLowerInvariant()
+    }
+    elseif ($checksumText.Contains(":")) {
+        $payload = $checksumText.Substring($checksumText.IndexOf(":") + 1)
+        $groupedHex = $payload -replace "[^A-Fa-f0-9]", ""
+
+        if ($groupedHex.Length -ge 128) {
+            $expected = $groupedHex.Substring(0, 128).ToLowerInvariant()
+        }
+    }
+
+    if (-not $expected) {
         Fail "Apache SHA-512 degeri okunamadi: $ChecksumFile"
     }
 
-    $expected = $match.Value.ToLowerInvariant()
     $actual = (Get-FileHash -Path $Archive -Algorithm SHA512).Hash.ToLowerInvariant()
 
     if ($expected -ne $actual) {
