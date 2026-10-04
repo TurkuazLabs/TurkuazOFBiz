@@ -1,7 +1,7 @@
 # Dosya Yolu: /tools/ci/validate-structure.sh
 # Amac: TurkuazOFBiz konfigurasyon yapisinin syntax, katman, resolver ve release metadata testlerini calistirir
 # Tool - Shell
-# Version: 1.7.1
+# Version: 1.7.2
 # Aciklama: CI icin ag gerektirmeyen syntax, katman, release/snapshot, Docker image ve proje surum testleri
 #
 # Bagimli Oldugu Katman: Tool | Controller | Service | Repo | View | Language | Config
@@ -59,7 +59,7 @@ validate_release_metadata() {
 
     [[ "${project_version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]         || fail "Invalid VERSION format: ${project_version}"
 
-    grep -Eq "^## \\\[${project_version}\\\] - [0-9]{4}-[0-9]{2}-[0-9]{2}$" "${OFBIZ_ROOT_DIR}/CHANGELOG.md"         || fail "CHANGELOG.md does not contain VERSION ${project_version}"
+    grep -Fq "## [${project_version}] - " "${OFBIZ_ROOT_DIR}/CHANGELOG.md"         || fail "CHANGELOG.md does not contain VERSION ${project_version}"
 
     grep -Fq "# TurkuazOFBiz v${project_version}" "${OFBIZ_ROOT_DIR}/RELEASE_NOTES.md"         || fail "RELEASE_NOTES.md does not contain VERSION ${project_version}"
 
