@@ -1,14 +1,14 @@
 # Dosya Yolu: /install.ps1
 # Amac: Windows kullanicisi icin TurkuazOFBiz ve OFBiz Docker kurulumunu tek komutta yonetir
 # Tool - PowerShell
-# Version: 1.1.0
+# Version: 1.2.0
 # Aciklama: Stabil TurkuazOFBiz release'ini indirir, WSL/Docker'i hazirlar, OFBiz 24.09.07 demo container'ini baslatir ve tarayiciyi acar
 #
 # Bagimli Oldugu Katman: Tool | Controller | Service | Config
 
 [CmdletBinding()]
 param(
-    [ValidateSet("install", "start", "stop", "status", "doctor", "open")]
+    [ValidateSet("install", "start", "stop", "status", "doctor", "open", "password")]
     [string]$Action = "install",
     [string]$Distro = "",
     [string]$OFBizVersion = "24.09.07",
@@ -233,6 +233,12 @@ function New-AdminPassword {
 function Get-AdminPassword {
     New-Item -ItemType Directory -Force -Path $InstallRoot | Out-Null
 
+    if ($Variant -eq "demo") {
+        $password = "ofbiz"
+        Set-Content -Path $SecretFile -Value $password -Encoding ASCII
+        return $password
+    }
+
     if (Test-Path $SecretFile) {
         $existing = (Get-Content -Path $SecretFile -Raw).Trim()
         if ($existing) {
@@ -377,14 +383,32 @@ function Invoke-Doctor {
     Invoke-WslBash -LinuxDistro $linuxDistro -Command "cd '$linuxRepo' && bash controllers/ofbiz.sh doctor docker"
 }
 
+function Invoke-Password {
+    if ($Variant -eq "demo") {
+        $password = Get-AdminPassword
+    }
+    elseif (Test-Path $SecretFile) {
+        $password = (Get-Content -Path $SecretFile -Raw).Trim()
+    }
+    else {
+        Fail "Runtime admin parola dosyasi bulunamadi: $SecretFile"
+    }
+
+    Write-Host "Kullanici    : admin"
+    Write-Host "Parola       : $password"
+    Write-Host "Varyant      : $Variant"
+    Write-Host "Parola dosya : $SecretFile"
+}
+
 try {
     switch ($Action) {
         "install" { Invoke-Install }
         "start"   { Invoke-Start }
         "stop"    { Invoke-Stop }
         "status"  { Invoke-Status }
-        "doctor"  { Invoke-Doctor }
-        "open"    { Open-OFBiz }
+        "doctor"   { Invoke-Doctor }
+        "open"     { Open-OFBiz }
+        "password" { Invoke-Password }
         default   { Fail "Bilinmeyen action: $Action" }
     }
     exit 0

@@ -1,7 +1,7 @@
 # Dosya Yolu: /README.md
 # Amac: TurkuazOFBiz projesinin ana giris, kurulum ve kullanim rehberini sunar
 # View - Markdown
-# Version: 3.7.0
+# Version: 3.8.0
 # Aciklama: Apache OFBiz release, snapshot, runtime ve Docker yonetim araclarini tanitir
 #
 # Bagimli Oldugu Katman: View | Controller | Service | Repo | Tool | Language | Config
@@ -11,7 +11,7 @@
 [![CI](https://github.com/TurkuazLabs/TurkuazOFBiz/actions/workflows/ofbiz-config-ci.yml/badge.svg)](https://github.com/TurkuazLabs/TurkuazOFBiz/actions/workflows/ofbiz-config-ci.yml)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 
-**Current version:** v1.4.3
+**Current version:** v1.4.4
 
 TurkuazOFBiz, Apache OFBiz release ve branch tabanli snapshot hedeflerini ayni arabirimden yonetmek icin gelistirilen acik kaynak yonetim aracidir.
 
@@ -39,7 +39,20 @@ https://localhost:8443/partymgr
 
 Installer container'i baslattiktan sonra bu endpoint 2xx/3xx cevap verene kadar bekler ve sonra tarayiciyi acar.
 
-Admin parolasi otomatik uretilir ve sadece kullanici profilinde saklanir.
+Varsayilan demo image resmi Apache demo verisini kullanir. Demo girisi:
+
+~~~text
+Kullanici: admin
+Parola: ofbiz
+~~~
+
+Demo varyantinda parola dosyasi bu degerle senkronize edilir. Runtime varyantinda ise guclu rastgele admin parolasi otomatik uretilir ve kullanici profilinde saklanir.
+
+Windows installer ile parolayi tekrar gormek icin:
+
+~~~powershell
+.\TurkuazOFBiz-Installer.ps1 -Action password
+~~~
 
 ## Linux / WSL tek komut
 

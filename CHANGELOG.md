@@ -1,7 +1,7 @@
 # Dosya Yolu: /CHANGELOG.md
 # Amac: TurkuazOFBiz surumlerindeki kullaniciya donuk degisiklikleri kaydeder
 # View - Markdown
-# Version: 1.4.3
+# Version: 1.4.4
 # Aciklama: Semantic versioning tabanli proje degisiklik gecmisi
 #
 # Bagimli Oldugu Katman: View
@@ -11,6 +11,21 @@
 Tum dikkat cekici TurkuazOFBiz degisiklikleri bu dosyada kaydedilir.
 
 Surumleme Semantic Versioning mantigini izler.
+
+## [1.4.4] - 2026-10-04
+
+### Fixed
+
+- Apache OFBiz preloaddemo image icindeki resmi demo admin hesabi ile installer parola dosyasi senkronize edildi.
+- Demo varyantinda yanlis rastgele parola uretmek yerine resmi admin / ofbiz girisi kullanilir.
+- Runtime varyantinda rastgele guclu admin parola davranisi korunur.
+- Windows ve Linux installer'a password action eklendi.
+- Mevcut yanlis demo parola dosyasi yeni installer tarafindan ofbiz degeriyle duzeltilir.
+
+### Verified
+
+- Apache OFBiz release24.09 docker-entrypoint demo veri yuklemesinin admin hesabini zaten yuklenmis olarak isaretledigi dogrulandi.
+- Apache OFBiz Docker dokumantasyonundaki demo admin girisi admin / ofbiz ile eslestirildi.
 
 ## [1.4.3] - 2026-10-04
 

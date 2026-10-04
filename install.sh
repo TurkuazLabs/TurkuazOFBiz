@@ -1,7 +1,7 @@
 # Dosya Yolu: /install.sh
 # Amac: Linux ve WSL kullanicisi icin TurkuazOFBiz Docker kurulumunu tek komutta yonetir
 # Tool - Shell
-# Version: 1.1.0
+# Version: 1.2.0
 # Aciklama: Stabil TurkuazOFBiz release'ini hazirlar, Docker'i dogrular, OFBiz 24.09.07 demo container'ini baslatir ve tarayiciyi acar
 #
 # Bagimli Oldugu Katman: Tool | Controller | Service | Config
@@ -130,6 +130,14 @@ admin_password() {
     local password
 
     mkdir -p "${APP_HOME}"
+
+    if [[ "${OFBIZ_VARIANT}" == "demo" ]]; then
+        password="ofbiz"
+        printf '%s\n' "${password}" > "${SECRET_FILE}"
+        chmod 600 "${SECRET_FILE}"
+        printf '%s\n' "${password}"
+        return
+    fi
 
     if [[ -s "${SECRET_FILE}" ]]; then
         cat "${SECRET_FILE}"
@@ -279,6 +287,23 @@ doctor_ofbiz() {
     )
 }
 
+password_ofbiz() {
+    local password
+
+    if [[ "${OFBIZ_VARIANT}" == "demo" ]]; then
+        password="$(admin_password)"
+    elif [[ -s "${SECRET_FILE}" ]]; then
+        password="$(cat "${SECRET_FILE}")"
+    else
+        fail "Runtime admin parola dosyasi bulunamadi: ${SECRET_FILE}"
+    fi
+
+    printf 'Kullanici    : admin\n'
+    printf 'Parola       : %s\n' "${password}"
+    printf 'Varyant      : %s\n' "${OFBIZ_VARIANT}"
+    printf 'Parola dosya : %s\n' "${SECRET_FILE}"
+}
+
 case "${ACTION}" in
     install)
         install_ofbiz
@@ -298,7 +323,10 @@ case "${ACTION}" in
     open)
         open_browser
         ;;
+    password)
+        password_ofbiz
+        ;;
     *)
-        fail "Bilinmeyen action: ${ACTION}. Desteklenen: install, start, stop, status, doctor, open"
+        fail "Bilinmeyen action: ${ACTION}. Desteklenen: install, start, stop, status, doctor, open, password"
         ;;
 esac
