@@ -1,14 +1,26 @@
 # Dosya Yolu: /README.md
-# Amac: OFBiz konfigurasyon paketinin ana giris ve klasor haritasini sunar
+# Amac: TurkuazOFBiz projesinin ana giris, kurulum ve kullanim rehberini sunar
 # View - Markdown
-# Version: 2.2.0
-# Aciklama: Release, snapshot, runtime ve Docker araclari icin hizli baslangic rehberi
+# Version: 3.0.0
+# Aciklama: Apache OFBiz release, snapshot, runtime ve Docker yonetim araclarini tanitir
 #
 # Bagimli Oldugu Katman: View | Controller | Service | Repo | Tool | Language | Config
 
-# Apache OFBiz Configs
+# TurkuazOFBiz
 
-Bu paket Apache OFBiz'in sabit release surumlerini, branch tabanli snapshot hedeflerini ve Docker image/container akislarini ayni arabirimden yonetir.
+TurkuazOFBiz, Apache OFBiz release ve branch tabanli snapshot hedeflerini ayni arabirimden yonetmek icin gelistirilen acik kaynak yonetim aracidir.
+
+Bu proje Apache OFBiz'in resmi dagitimi degildir. Apache OFBiz kaynaklarini, resmi release paketlerini ve resmi container image'larini kullanir.
+
+## Hizli baslangic
+
+~~~bash
+git clone https://github.com/TurkuazLabs/TurkuazOFBiz.git
+cd TurkuazOFBiz
+
+bash tools/ci/validate-structure.sh
+bash controllers/ofbiz.sh help
+~~~
 
 ## Release
 
@@ -39,7 +51,7 @@ bash controllers/ofbiz.sh docker pull snapshot 24.09 runtime
 
 ## Docker local build
 
-22.01 resmi guncel GHCR tag'i yerine Apache release22.01 branch Dockerfile'i ile local build edilir:
+22.01 icin Apache release22.01 branch Dockerfile'i kullanilir:
 
 ~~~bash
 bash controllers/ofbiz.sh docker build snapshot 22.01 runtime
@@ -53,13 +65,14 @@ bash controllers/ofbiz.sh docker build release 18.12.10 runtime
 
 ## Docker calistirma
 
-Production veya kalici kullanim icin admin parolasi ortamdan verilmelidir:
+Admin parolasi repoya yazilmaz:
 
 ~~~bash
-OFBIZ_ADMIN_PASSWORD='<secret>' bash controllers/ofbiz.sh docker run release 24.09.07 runtime
+OFBIZ_ADMIN_PASSWORD='<secret>' \
+bash controllers/ofbiz.sh docker run release 24.09.07 runtime
 ~~~
 
-Varsayilan HTTPS bind adresi yalnizca localhost'tur:
+Varsayilan HTTPS bind adresi:
 
 ~~~text
 https://localhost:8443/
@@ -71,7 +84,7 @@ https://localhost:8443/
 bash controllers/ofbiz.sh docker smoke release 24.09.07 demo
 ~~~
 
-## Compose
+## Docker Compose
 
 ~~~bash
 cd tools/docker
@@ -83,6 +96,23 @@ docker compose -f compose.yml up -d
 
 Gercek .env dosyasi Git tarafindan ignore edilir.
 
+## CI
+
+GitHub Actions su kontrolleri calistirir:
+
+~~~text
+Bash syntax
+ShellCheck
+katman/header testleri
+release/snapshot resolver testleri
+Docker tag resolver testleri
+resmi GHCR manifest kontrolleri
+24.09.07 preloaddemo gercek HTTPS smoke testi
+release22.01 Dockerfile build check
+~~~
+
 Detayli kullanim: views/README.md
 
 Mimari: views/ARCHITECTURE.md
+
+Kaynak proje: https://ofbiz.apache.org/

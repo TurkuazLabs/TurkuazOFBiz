@@ -1,7 +1,7 @@
 # Dosya Yolu: /tools/legacy/ofbiz/ofbiz-linux-18.12.07.sh
 # Amac: Eski OFBiz 18.12.07 tek-surum kurulum scriptini arsivler
 # Tool - Shell
-# Version: 1.0.0
+# Version: 1.1.0
 # Aciklama: Tarihsel CentOS tabanli kurulum; yeni kurulumlarda controllers/ofbiz.sh kullanilmalidir
 #
 # Bagimli Oldugu Katman: Tool
