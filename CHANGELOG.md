@@ -18,9 +18,9 @@ Surumleme Semantic Versioning mantigini izler.
 
 - Windows installer'daki LOCALAPPDATA yolunun WSL yoluna cevrilmesinde dogrudan wslpath cagrisi kaldirildi.
 - Standart WSL mount yapisinda C:\ yolu dogrudan /mnt/c/ yoluna cevrilir ve WSL icinde varligi dogrulanir.
-- Standart mount disinda WSLENV /p path translation fallback'i kullanilir.
 - Ubuntu-24.04 ortaminda Windows yolu arguman aktarimindan kaynaklanan "Windows yolu WSL yoluna cevrilemedi" hatasi giderildi.
 - CI installer'in tekrar dogrudan wslpath kullanmasini engelleyen regression kontrolleri ekledi.
+- Yol donusumu PowerShell Path API + standart WSL2 /mnt/<drive> mount modeliyle sadeleştirildi.
 
 ## [1.4.1] - 2026-10-04
 

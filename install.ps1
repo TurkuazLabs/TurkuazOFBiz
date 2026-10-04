@@ -138,64 +138,26 @@ function Convert-ToWslPath {
     )
 
     $fullPath = [System.IO.Path]::GetFullPath($WindowsPath)
+    $root = [System.IO.Path]::GetPathRoot($fullPath)
 
-    if ($fullPath -match '^([A-Za-z]):\\(.*)$') {
-        $drive = $Matches[1].ToLowerInvariant()
-        $tail = $Matches[2] -replace '\\', '/'
-        $candidate = "/mnt/$drive/$tail"
-
-        & wsl.exe -d $LinuxDistro -- test -d $candidate 2>$null
-        if ($LASTEXITCODE -eq 0) {
-            return $candidate
-        }
+    if ([string]::IsNullOrWhiteSpace($root) -or $root.Length -lt 2 -or $root[1] -ne ':') {
+        Fail "Desteklenmeyen Windows yolu: $fullPath"
     }
 
-    $previousWindowsPath = $env:TURKUAZOFBIZ_WINDOWS_PATH
-    $previousWslEnv = $env:WSLENV
+    $drive = ([string]$root[0]).ToLowerInvariant()
+    $relative = $fullPath.Substring($root.Length).Replace('\', '/')
+    $candidate = "/mnt/$drive"
 
-    try {
-        $env:TURKUAZOFBIZ_WINDOWS_PATH = $fullPath
-
-        $otherEntries = @()
-        if ($previousWslEnv) {
-            $otherEntries = @(
-                $previousWslEnv -split ':' |
-                    Where-Object {
-                        $_ -and
-                        $_ -notmatch '^TURKUAZOFBIZ_WINDOWS_PATH(?:/.*)?$'
-                    }
-            )
-        }
-
-        $env:WSLENV = (@("TURKUAZOFBIZ_WINDOWS_PATH/p") + $otherEntries) -join ':'
-
-        $result = & wsl.exe -d $LinuxDistro -- printenv TURKUAZOFBIZ_WINDOWS_PATH 2>$null
-        if ($LASTEXITCODE -eq 0 -and $result) {
-            $candidate = ([string]$result).Trim()
-
-            & wsl.exe -d $LinuxDistro -- test -d $candidate 2>$null
-            if ($LASTEXITCODE -eq 0) {
-                return $candidate
-            }
-        }
-    }
-    finally {
-        if ($null -eq $previousWindowsPath) {
-            Remove-Item Env:\TURKUAZOFBIZ_WINDOWS_PATH -ErrorAction SilentlyContinue
-        }
-        else {
-            $env:TURKUAZOFBIZ_WINDOWS_PATH = $previousWindowsPath
-        }
-
-        if ($null -eq $previousWslEnv) {
-            Remove-Item Env:\WSLENV -ErrorAction SilentlyContinue
-        }
-        else {
-            $env:WSLENV = $previousWslEnv
-        }
+    if ($relative) {
+        $candidate = "$candidate/$relative"
     }
 
-    Fail "Windows yolu WSL icinde bulunamadi: $fullPath"
+    & wsl.exe -d $LinuxDistro -- test -d $candidate 2>$null
+    if ($LASTEXITCODE -ne 0) {
+        Fail "Windows yolu WSL icinde bulunamadi: $fullPath -> $candidate"
+    }
+
+    return $candidate
 }
 
 function Invoke-WslBash {

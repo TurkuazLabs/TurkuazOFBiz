@@ -22,7 +22,7 @@ v1.4.2 ile:
 
 - Standart Windows drive path'i /mnt/<drive>/... bicimine cevrilir.
 - Olusan dizinin secilen WSL dagitimi icinde gercekten var oldugu kontrol edilir.
-- Standart /mnt yapisi kullanilmiyorsa WSLENV path translation fallback'i devreye girer.
 - Dogrudan wslpath bagimliligi kaldirilmistir.
+- Windows surucu harfi PowerShell Path API ile okunur ve standart WSL2 /mnt/<drive>/... yoluna donusturulur.
 
 Installer yeniden calistirildiginda mevcut yonetilen repo dizinini guncel stabil release ile senkronize eder.
