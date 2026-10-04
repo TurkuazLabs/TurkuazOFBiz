@@ -1,7 +1,7 @@
 # Dosya Yolu: /README.md
 # Amac: TurkuazOFBiz projesinin ana giris, kurulum ve kullanim rehberini sunar
 # View - Markdown
-# Version: 3.3.1
+# Version: 3.4.0
 # Aciklama: Apache OFBiz release, snapshot, runtime ve Docker yonetim araclarini tanitir
 #
 # Bagimli Oldugu Katman: View | Controller | Service | Repo | Tool | Language | Config
@@ -79,10 +79,16 @@ Herhangi bir release'i kaynaktan build etmek de mumkundur:
 
 ~~~bash
 bash controllers/ofbiz.sh docker build release 18.12.10 runtime
-bash controllers/ofbiz.sh docker build release 17.12.09 runtime
+bash controllers/ofbiz.sh docker build release 17.12.09 demo
 ~~~
 
-Resmi Dockerfile'i olmayan eski release'lerde Dockerfile.compat kullanilir ve gerekli Java major surumu release katalogundan otomatik aktarilir.
+Resmi Dockerfile'i olmayan eski release'lerde Dockerfile.compat kullanilir ve gerekli Java major surumu release katalogundan otomatik aktarilir. Legacy compat image modern Apache Docker entrypoint davranisini taklit etmez; calistirma icin preloaded demo varyanti kullanilir:
+
+~~~bash
+bash controllers/ofbiz.sh docker run release 17.12.09 demo
+~~~
+
+17.12 demo verisindeki varsayilan test girisi admin / ofbiz'dir; production kullanimi icin bu legacy demo kimlik bilgileri uygun degildir.
 
 ## Docker calistirma
 
@@ -133,7 +139,7 @@ doctor ag/sistem smoke kontrolleri
 17.12.09 + Temurin 8 + Gradle runtime testi
 18.12.19 + Temurin 8 + Gradle runtime testi
 24.09.07 + Temurin 17 + Gradle runtime testi
-17.12.09 Dockerfile.compat + Java 8 image testi
+17.12.09 Dockerfile.compat + Java 8 + HTTPS demo container testi
 resmi GHCR manifest kontrolleri
 24.09.07 preloaddemo gercek HTTPS smoke testi
 release22.01 Dockerfile build check

@@ -1,7 +1,7 @@
 # Dosya Yolu: /services/docker-service.sh
 # Amac: OFBiz release ve snapshot Docker image/container is kurallarini yonetir
 # Service - Shell
-# Version: 1.1.1
+# Version: 1.2.0
 # Aciklama: Resmi image pull, kaynak koddan build, container run ve smoke test akislarini koordine eder
 #
 # Bagimli Oldugu Katman: Service | Repo | Tool | Config
@@ -223,10 +223,21 @@ ofbiz_docker_service_run() {
     image="$(ofbiz_docker_service_resolve_runtime_image "${type}" "${identifier}" "${variant}")"
     container_name="$(ofbiz_docker_repository_container_name "${type}" "${identifier}")"
 
+    if ofbiz_docker_tool_image_is_compat "${image}"; then
+        if [[ "${variant}" != "${OFBIZ_DOCKER_VARIANT_DEMO}" ]]; then
+            ofbiz_docker_service_fail                 "Legacy compat runtime image has no automatic data initialization. Build and run the demo variant."
+        fi
+
+        ofbiz_docker_tool_run_compat             "${image}"             "${container_name}"             "${OFBIZ_HTTPS_BIND:-${OFBIZ_DOCKER_DEFAULT_HTTPS_BIND}}"             "${OFBIZ_HTTPS_PORT:-${OFBIZ_DOCKER_DEFAULT_HTTPS_PORT}}"
+
+        printf '%s\n' "${container_name}"
+        return
+    fi
+
     data_load="${OFBIZ_DATA_LOAD:-${OFBIZ_DOCKER_DEFAULT_DATA_LOAD}}"
     admin_password="${OFBIZ_ADMIN_PASSWORD:-}"
 
-    [[ -n "${admin_password}" ]]         || ofbiz_docker_service_fail "OFBIZ_ADMIN_PASSWORD must be set before running a container."
+    [[ -n "${admin_password}" ]]         || ofbiz_docker_service_fail "OFBIZ_ADMIN_PASSWORD must be set before running a modern container."
 
     ofbiz_docker_tool_run         "${image}"         "${container_name}"         "${data_load}"         "${OFBIZ_ADMIN_USER:-${OFBIZ_DOCKER_DEFAULT_ADMIN_USER}}"         "${admin_password}"         "${OFBIZ_HOST:-${OFBIZ_DOCKER_DEFAULT_HOST}}"         "${OFBIZ_HTTPS_BIND:-${OFBIZ_DOCKER_DEFAULT_HTTPS_BIND}}"         "${OFBIZ_HTTPS_PORT:-${OFBIZ_DOCKER_DEFAULT_HTTPS_PORT}}"
 

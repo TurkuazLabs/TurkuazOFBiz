@@ -1,7 +1,7 @@
 # Dosya Yolu: /.github/workflows/ofbiz-config-ci.yml
 # Amac: TurkuazOFBiz araclarinin statik, release matrisi, doctor ve Docker dogrulamalarini calistirir
 # Tool - YAML
-# Version: 2.5.0
+# Version: 2.6.0
 # Aciklama: Syntax, ShellCheck, release metadata, gercek release/JDK/Gradle matrisi ve Docker testlerini kosar
 #
 # Bagimli Oldugu Katman: Tool | Controller | Service | Repo | Config
@@ -157,20 +157,50 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Build 17.12.09 compat runtime image
+      - name: Build 17.12.09 compat demo image
         shell: bash
-        run: bash controllers/ofbiz.sh docker build release 17.12.09 runtime
+        run: bash controllers/ofbiz.sh docker build release 17.12.09 demo
 
-      - name: Verify compat image Java
+      - name: Verify compat image metadata and Java
         shell: bash
         run: |
           set -euo pipefail
 
-          IMAGE="local/ofbiz:release-17.12.09-runtime"
+          IMAGE="local/ofbiz:release-17.12.09-demo"
 
           docker image inspect "$IMAGE" >/dev/null
+          test "$(docker image inspect --format '{{ index .Config.Labels "org.turkuazlabs.turkuazofbiz.compat" }}' "$IMAGE")" = "true"
           docker run --rm --entrypoint java "$IMAGE" -version 2>&1 | tee "$RUNNER_TEMP/java-version.txt"
           grep -Eq '1\.8\.0|version "1\.8' "$RUNNER_TEMP/java-version.txt"
+
+      - name: Run legacy compat HTTPS smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          CONTAINER="ofbiz-release-17-12-09"
+          trap 'docker logs "$CONTAINER" || true; docker rm -f "$CONTAINER" >/dev/null 2>&1 || true' EXIT
+
+          OFBIZ_HTTPS_PORT=18444             bash controllers/ofbiz.sh docker run release 17.12.09 demo
+
+          for attempt in $(seq 1 72); do
+            HTTP_CODE="$(curl               --insecure               --silent               --output /dev/null               --write-out '%{http_code}'               https://localhost:18444/webtools 2>/dev/null || true)"
+
+            if [[ "$HTTP_CODE" =~ ^[23][0-9][0-9]$ ]]; then
+              echo "Legacy OFBiz HTTPS ready with status $HTTP_CODE."
+              exit 0
+            fi
+
+            if [[ "$(docker inspect --format '{{.State.Running}}' "$CONTAINER" 2>/dev/null || true)" != "true" ]]; then
+              echo "Legacy OFBiz container stopped before readiness." >&2
+              exit 1
+            fi
+
+            sleep 5
+          done
+
+          echo "Legacy OFBiz HTTPS readiness timeout." >&2
+          exit 1
 
   docker-smoke:
     name: Docker smoke 24.09.07

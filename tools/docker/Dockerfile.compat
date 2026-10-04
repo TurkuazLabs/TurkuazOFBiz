@@ -1,14 +1,16 @@
 # Dosya Yolu: /tools/docker/Dockerfile.compat
 # Amac: Resmi Dockerfile bulunmayan eski OFBiz release paketleri icin runtime ve demo image'lari olusturur
 # Config - Dockerfile
-# Version: 2.0.1
-# Aciklama: Legacy wrapper checksum uyumlulugu ve Java major build arg ile runtime/demo image'lari olusturur
+# Version: 2.1.0
+# Aciklama: Legacy wrapper checksum uyumlulugu, compat image etiketi ve Java major build arg ile image olusturur
 #
 # Bagimli Oldugu Katman: Config | Tool
 
 ARG JAVA_MAJOR=17
 
 FROM eclipse-temurin:${JAVA_MAJOR}-jdk AS base
+
+LABEL org.turkuazlabs.turkuazofbiz.compat="true"
 
 WORKDIR /ofbiz
 

@@ -24,8 +24,10 @@ v1.2.1 ile:
 - 24.09.x -> Java 17
 - Snapshot hedefleri -> ilgili snapshot Java mapping'i
 
+Compat image'lar label ile algilanir. Modern Apache Docker entrypoint'ine ait OFBIZ_ADMIN_PASSWORD, OFBIZ_DATA_LOAD ve modern volume davranisi eski 17.12 image'ina zorla uygulanmaz. Legacy container icin preloaded demo varyanti kullanilir.
+
 Resmi Dockerfile mevcutsa Apache'in kendi Dockerfile'i degistirilmeden kullanilmaya devam eder.
 
 ## Validation
 
-CI Docker Java mapping'lerini statik olarak kontrol eder. Ayrica 17.12.09 icin gercek Dockerfile.compat runtime image build edilir ve image icindeki Java'nin 1.8 oldugu dogrulanir. Mevcut release runtime matrisi, Doctor ve modern Docker smoke testleri de korunur.
+CI Docker Java mapping'lerini statik olarak kontrol eder. Ayrica 17.12.09 icin gercek Dockerfile.compat demo image loadAll ile build edilir, image icindeki Java'nin 1.8 oldugu dogrulanir, container baslatilir ve /webtools HTTPS endpoint'i smoke test edilir. Mevcut release runtime matrisi, Doctor ve modern Docker smoke testleri de korunur.

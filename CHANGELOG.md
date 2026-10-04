@@ -22,9 +22,13 @@ Surumleme Semantic Versioning mantigini izler.
 - CI artik 17.12.09 icin gercek Dockerfile.compat runtime image build eder ve image icindeki Java 8 surumunu dogrular.
 - Legacy Gradle wrapper icindeki shasum cagrisi, Apache 18.12 Dockerfile'indaki yaklasimla uyumlu olarak sha1sum'a normalize edilir.
 - Docker build hata cleanup'i local work_dir scope disina cikan EXIT trap yerine function-scoped subshell cleanup ile guvenli hale getirildi.
+- Compat image'lar metadata label ile modern Apache image'larindan ayrilir.
+- Legacy compat run yolu modern OFBIZ_* entrypoint degiskenlerini ve modern volume mountlarini zorla uygulamaz.
+- Legacy compat runtime image otomatik data initialization saglamadigi icin CLI run yolu demo varyantini zorunlu tutar.
 
 ### Verified
 
+- CI 17.12.09 demo compat image'ini gercek loadAll ile build eder, image icinde Java 8'i dogrular ve /webtools HTTPS endpoint'ini gercek container ile smoke test eder.
 - Apache release17.12 kaynaginda Dockerfile bulunmadigi ve compat fallback gerektigi dogrulandi.
 - Apache release18.12 Dockerfile'inin kendi icinde Eclipse Temurin 8 kullandigi dogrulandi.
 - Modern Apache Docker volume yollarinin /ofbiz/config, /ofbiz/runtime, /ofbiz/lib-extra ve /docker-entrypoint-hooks oldugu kaynak Dockerfile ile dogrulandi.

@@ -1,7 +1,7 @@
 # Dosya Yolu: /tools/docker-tool.sh
 # Amac: Docker CLI islemlerini OFBiz Service katmani icin adaptor olarak sunar
 # Tool - Shell
-# Version: 1.1.0
+# Version: 1.2.0
 # Aciklama: Image pull/build, container run/stop/status, manifest ve HTTPS smoke test islemlerini yonetir
 #
 # Bagimli Oldugu Katman: Tool
@@ -36,6 +36,26 @@ ofbiz_docker_tool_build() {
     fi
 
     DOCKER_BUILDKIT=1 docker build         "${build_args[@]}"         --target "${variant}"         --file "${dockerfile}"         --tag "${image}"         "${source_dir}"
+}
+
+ofbiz_docker_tool_image_is_compat() {
+    local image="${1:?image required}"
+    local value
+
+    value="$(docker image inspect         --format '{{ index .Config.Labels "org.turkuazlabs.turkuazofbiz.compat" }}'         "${image}" 2>/dev/null || true)"
+
+    [[ "${value}" == "true" ]]
+}
+
+ofbiz_docker_tool_run_compat() {
+    local image="${1:?image required}"
+    local container_name="${2:?container name required}"
+    local bind_address="${3:?bind address required}"
+    local https_port="${4:?https port required}"
+
+    docker rm -f "${container_name}" >/dev/null 2>&1 || true
+
+    docker run -d         --name "${container_name}"         --restart unless-stopped         --publish "${bind_address}:${https_port}:8443"         "${image}"
 }
 
 ofbiz_docker_tool_run() {
