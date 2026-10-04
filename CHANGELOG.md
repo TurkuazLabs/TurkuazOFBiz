@@ -1,7 +1,7 @@
 # Dosya Yolu: /CHANGELOG.md
 # Amac: TurkuazOFBiz surumlerindeki kullaniciya donuk degisiklikleri kaydeder
 # View - Markdown
-# Version: 1.1.0
+# Version: 1.2.0
 # Aciklama: Semantic versioning tabanli proje degisiklik gecmisi
 #
 # Bagimli Oldugu Katman: View
@@ -11,6 +11,25 @@
 Tum dikkat cekici TurkuazOFBiz degisiklikleri bu dosyada kaydedilir.
 
 Surumleme Semantic Versioning mantigini izler.
+
+## [1.2.0] - 2026-10-04
+
+### Added
+
+- Desteklenen sabit release serileri icin gercek CI runtime matrisi.
+- Apache OFBiz 17.12.09 + Temurin 8 dogrulamasi.
+- Apache OFBiz 18.12.19 + Temurin 8 dogrulamasi.
+- Apache OFBiz 24.09.07 + Temurin 17 dogrulamasi.
+- Her matrix hedefinde resmi ZIP + SHA-512, izole Temurin JDK, Gradle wrapper ve Gradle build script yukleme testi.
+
+### Verified
+
+- Apache arsivinde 17.12.01-17.12.09 serisinin tamam oldugu dogrulandi.
+- Apache arsivinde 18.12.01-18.12.19 serisinin tamam oldugu dogrulandi.
+- Apache release history ile 24.09.01-24.09.07 serisinin tamam oldugu dogrulandi.
+- release17.12 ve release18.12 kaynaklarinda Java source/target compatibility 1.8 oldugu dogrulandi.
+- release24.09 ve trunk icin Java 17 gereksinimi dogrulandi.
+- Background ve shutdown Gradle komut bicimleri Apache kaynak ornekleriyle eslestirildi.
 
 ## [1.1.0] - 2026-10-04
 

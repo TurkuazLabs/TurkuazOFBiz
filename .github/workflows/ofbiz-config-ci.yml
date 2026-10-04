@@ -1,8 +1,8 @@
 # Dosya Yolu: /.github/workflows/ofbiz-config-ci.yml
-# Amac: TurkuazOFBiz araclarinin statik ve gercek Docker smoke dogrulamasini calistirir
+# Amac: TurkuazOFBiz araclarinin statik, release matrisi, doctor ve Docker dogrulamalarini calistirir
 # Tool - YAML
-# Version: 2.3.0
-# Aciklama: Syntax, ShellCheck, release metadata, resolver ve gercek Docker testlerini kosar
+# Version: 2.4.0
+# Aciklama: Syntax, ShellCheck, release metadata, gercek release/JDK/Gradle matrisi ve Docker testlerini kosar
 #
 # Bagimli Oldugu Katman: Tool | Controller | Service | Repo | Config
 
@@ -64,35 +64,76 @@ jobs:
       - name: ShellCheck active scripts
         shell: bash
         run: |
-          find controllers services repositories tools \
-            -type f -name '*.sh' \
-            -not -path '*/legacy/*' \
-            -print0 \
-            | xargs -0 shellcheck -s bash -S error -e SC1090,SC1091
+          find controllers services repositories tools             -type f -name '*.sh'             -not -path '*/legacy/*'             -print0             | xargs -0 shellcheck -s bash -S error -e SC1090,SC1091
 
-  release-zip-smoke:
-    name: Release ZIP checksum 24.09.07
+  release-runtime-matrix:
+    name: Release runtime ${{ matrix.version }} / Java ${{ matrix.java }}
     needs: validate
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - version: "17.12.09"
+            java: "8"
+          - version: "18.12.19"
+            java: "8"
+          - version: "24.09.07"
+            java: "17"
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Download and verify official release
+      - name: Download release and isolated Temurin JDK
         shell: bash
+        env:
+          OFBIZ_VERSION: ${{ matrix.version }}
+          JAVA_MAJOR: ${{ matrix.java }}
         run: |
           set -euo pipefail
 
           source config/sources.conf
           source tools/release-tool.sh
+          source tools/java-tool.sh
 
-          DESTINATION="$RUNNER_TEMP/ofbiz-release-smoke"
-          mkdir -p "$DESTINATION"
+          DESTINATION="$RUNNER_TEMP/release"
+          JDKS_DIR="$RUNNER_TEMP/jdks"
 
-          ofbiz_tool_download_release             24.09.07             "$OFBIZ_CURRENT_BASE_URL"             "$OFBIZ_ARCHIVE_BASE_URL"             "$DESTINATION"
+          mkdir -p "$DESTINATION" "$JDKS_DIR"
 
-          test -x "$DESTINATION/apache-ofbiz-24.09.07/gradlew"
+          ofbiz_tool_download_release             "$OFBIZ_VERSION"             "$OFBIZ_CURRENT_BASE_URL"             "$OFBIZ_ARCHIVE_BASE_URL"             "$DESTINATION"
+
+          JAVA_HOME="$(ofbiz_tool_install_temurin_jdk             "$JAVA_MAJOR"             "$JDKS_DIR"             "$ADOPTIUM_API_BASE_URL")"
+
+          echo "JAVA_HOME=$JAVA_HOME" >> "$GITHUB_ENV"
+          echo "$JAVA_HOME/bin" >> "$GITHUB_PATH"
+
+      - name: Verify Java mapping
+        shell: bash
+        run: |
+          set -euo pipefail
+          java -version
+          javac -version
+          test -x "$JAVA_HOME/bin/javac"
+
+      - name: Initialize wrapper and load OFBiz Gradle build
+        shell: bash
+        env:
+          OFBIZ_VERSION: ${{ matrix.version }}
+        run: |
+          set -euo pipefail
+
+          OFBIZ_DIR="$RUNNER_TEMP/release/apache-ofbiz-$OFBIZ_VERSION"
+          cd "$OFBIZ_DIR"
+
+          if [[ -f gradle/init-gradle-wrapper.sh ]]; then
+            bash gradle/init-gradle-wrapper.sh
+          fi
+
+          chmod +x gradlew
+          ./gradlew --no-daemon --version
+          ./gradlew --no-daemon help
 
   doctor-smoke:
     name: Doctor smoke
@@ -139,7 +180,5 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          git clone --depth 1 --single-branch --branch release22.01 \
-            https://github.com/apache/ofbiz-framework.git \
-            "$RUNNER_TEMP/ofbiz-22.01"
+          git clone --depth 1 --single-branch --branch release22.01             https://github.com/apache/ofbiz-framework.git             "$RUNNER_TEMP/ofbiz-22.01"
           docker build --check "$RUNNER_TEMP/ofbiz-22.01"
