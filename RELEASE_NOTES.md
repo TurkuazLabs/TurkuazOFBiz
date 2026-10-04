@@ -1,40 +1,48 @@
 # Dosya Yolu: /RELEASE_NOTES.md
-# Amac: TurkuazOFBiz v1.2.2 GitHub release notlarini hazirlar
+# Amac: TurkuazOFBiz v1.3.0 GitHub release notlarini hazirlar
 # View - Markdown
-# Version: 1.2.2
-# Aciklama: Legacy Docker runtime ayrimi ve surum-drift guvencesini ozetler
+# Version: 1.3.0
+# Aciklama: Atomik release/snapshot kurulum ve metadata dogrulama modelini ozetler
 #
 # Bagimli Oldugu Katman: View
 
-# TurkuazOFBiz v1.2.2
+# TurkuazOFBiz v1.3.0
 
-Bu patch surumu v1.2.1 sonrasinda tamamlanan legacy Docker runtime ayrimini resmi surume dahil eder ve release/version tutarliligini CI seviyesinde korur.
+v1.3.0 release ve snapshot kurulumlarini yarim kalmis filesystem durumlarina karsi sertlestirir.
 
-## Fixed
+## Atomic install model
 
-Legacy Dockerfile.compat image'lari modern Apache OFBiz image'lariyla ayni entrypoint modeline sahip degildir. v1.2.2 ile:
+Yeni kurulum veya reinstall once hedef klasore yazmak yerine ayni parent filesystem altinda gecici staging dizininde hazirlanir.
 
-- Legacy compat container'a modern OFBIZ_ADMIN_PASSWORD ve OFBIZ_DATA_LOAD davranisi zorla uygulanmaz.
-- Modern Apache volume mountlari legacy compat image'a zorla eklenmez.
-- Legacy compat run yolu preloaded demo varyantini zorunlu tutar.
-- 17.12.09 image icindeki Java 8 dogrulanir.
-- Gercek container /webtools HTTPS endpoint'i ile smoke test edilir.
+Staging tamamlanmadan hedef degistirilmez. Basarili staging icin su kosullar dogrulanir:
 
-## Release integrity
+- gradlew mevcut ve executable.
+- .ofbiz-meta mevcut.
+- type dogru.
+- identifier dogru.
+- Java major dogru.
+- Snapshot icin .git repository mevcut.
 
-CI artik VERSION degerinin mevcut Git tag'i ile commit seviyesinde tutarli olup olmadigini kontrol eder.
+Dogrulama basarili olduktan sonra staging runtime hedef dizine tasinir.
 
-Ornegin v1.2.2 zaten bir committe yayinlanmissa, VERSION hala 1.2.2 iken yeni bir main commit CI'dan gecemez. Yeni degisiklik icin 1.2.3 veya uygun sonraki surume bump gerekir.
+Mevcut hedef varsa replacement sirasinda gecici backup tutulur. Yeni dizinin tasinmasi basarisiz olursa eski hedef restore edilmeye calisilir.
 
-Bu sayede GitHub Release, tag ve main kodu arasinda sessiz surum drift'i engellenir.
+## Release behavior
 
-## Validation
+Yarim kalmis bir release klasoru artik kurulu sayilmaz. Normal install bu hedefi yeniden hazirlar.
 
-- Statik mimari, Bash syntax ve ShellCheck.
-- 17.12.09 + Temurin 8 + Gradle runtime matrisi.
-- 18.12.19 + Temurin 8 + Gradle runtime matrisi.
-- 24.09.07 + Temurin 17 + Gradle runtime matrisi.
-- Gercek Apache ZIP + SHA-512 dogrulamasi.
-- Doctor smoke.
-- 17.12.09 legacy compat Docker demo build + HTTPS smoke.
-- 24.09.07 resmi Docker HTTPS smoke.
+Force reinstall yeni staging hazir olmadan mevcut saglam release'i silmez.
+
+## Snapshot behavior
+
+Snapshot install ayni atomik staging modelini kullanir.
+
+Snapshot update mevcut checkout'u yerinde degistirmek yerine branch'i yeniden staging'e clone eder, hazirlar ve dogrulama sonrasi hedefi degistirir.
+
+## CI
+
+- 17.12.09, 18.12.19 ve 24.09.07 release matrisi artik release-service ile gercek install akisini test eder.
+- Idempotent ikinci install aktivasyonu test edilir.
+- release24.09 snapshot install gercek snapshot-service, Git clone, Temurin 17 ve Gradle help ile test edilir.
+- Repository staging/replacement ve metadata validation yardimcilari ag gerektirmeyen testlerle kontrol edilir.
+- Doctor ve Docker smoke testleri korunur.

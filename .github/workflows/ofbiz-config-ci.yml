@@ -1,7 +1,7 @@
 # Dosya Yolu: /.github/workflows/ofbiz-config-ci.yml
 # Amac: TurkuazOFBiz araclarinin statik, release matrisi, doctor ve Docker dogrulamalarini calistirir
 # Tool - YAML
-# Version: 2.7.0
+# Version: 2.8.0
 # Aciklama: Syntax, ShellCheck, release metadata, gercek release/JDK/Gradle matrisi ve Docker testlerini kosar
 #
 # Bagimli Oldugu Katman: Tool | Controller | Service | Repo | Config
@@ -91,7 +91,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Download release and isolated Temurin JDK
+      - name: Install release through Service layer
         shell: bash
         env:
           OFBIZ_VERSION: ${{ matrix.version }}
@@ -99,46 +99,86 @@ jobs:
         run: |
           set -euo pipefail
 
-          source config/sources.conf
-          source tools/release-tool.sh
-          source tools/java-tool.sh
+          export OFBIZ_INSTALL_ROOT="$RUNNER_TEMP/ofbiz"
+          export OFBIZ_LOAD_DEMO=0
 
-          DESTINATION="$RUNNER_TEMP/release"
-          JDKS_DIR="$RUNNER_TEMP/jdks"
+          source services/release-service.sh
 
-          mkdir -p "$DESTINATION" "$JDKS_DIR"
+          ofbiz_release_service_require_environment() {
+            ofbiz_repository_init
+          }
 
-          ofbiz_tool_download_release             "$OFBIZ_VERSION"             "$OFBIZ_CURRENT_BASE_URL"             "$OFBIZ_ARCHIVE_BASE_URL"             "$DESTINATION"
+          ofbiz_release_service_install "$OFBIZ_VERSION"
 
-          JAVA_HOME="$(ofbiz_tool_install_temurin_jdk             "$JAVA_MAJOR"             "$JDKS_DIR"             "$ADOPTIUM_API_BASE_URL")"
+          RUNTIME_PATH="$(ofbiz_repository_release_path "$OFBIZ_VERSION")"
+          JAVA_HOME="$(ofbiz_repository_jdks_dir)/temurin-$JAVA_MAJOR"
+
+          ofbiz_repository_install_is_valid             "$RUNTIME_PATH"             release             "$OFBIZ_VERSION"             "$JAVA_MAJOR"
+
+          test "$(ofbiz_repository_current_path)" = "$RUNTIME_PATH"
+          test "$(ofbiz_repository_metadata_value "$RUNTIME_PATH" type)" = "release"
+          test "$(ofbiz_repository_metadata_value "$RUNTIME_PATH" identifier)" = "$OFBIZ_VERSION"
+          test "$(ofbiz_repository_metadata_value "$RUNTIME_PATH" java_major)" = "$JAVA_MAJOR"
+
+          ofbiz_release_service_install "$OFBIZ_VERSION"
+          test "$(ofbiz_repository_current_path)" = "$RUNTIME_PATH"
 
           echo "JAVA_HOME=$JAVA_HOME" >> "$GITHUB_ENV"
+          echo "OFBIZ_RUNTIME_PATH=$RUNTIME_PATH" >> "$GITHUB_ENV"
           echo "$JAVA_HOME/bin" >> "$GITHUB_PATH"
 
-      - name: Verify Java mapping
+      - name: Verify Java mapping and Gradle build
         shell: bash
         run: |
           set -euo pipefail
+
           java -version
           javac -version
           test -x "$JAVA_HOME/bin/javac"
 
-      - name: Initialize wrapper and load OFBiz Gradle build
+          cd "$OFBIZ_RUNTIME_PATH"
+          ./gradlew --no-daemon --version
+          ./gradlew --no-daemon help
+
+  snapshot-install-smoke:
+    name: Snapshot install release24.09
+    needs: validate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install snapshot through Service layer
         shell: bash
-        env:
-          OFBIZ_VERSION: ${{ matrix.version }}
         run: |
           set -euo pipefail
 
-          OFBIZ_DIR="$RUNNER_TEMP/release/apache-ofbiz-$OFBIZ_VERSION"
-          cd "$OFBIZ_DIR"
+          export OFBIZ_INSTALL_ROOT="$RUNNER_TEMP/ofbiz"
+          export OFBIZ_LOAD_DEMO=0
 
-          if [[ -f gradle/init-gradle-wrapper.sh ]]; then
-            bash gradle/init-gradle-wrapper.sh
-          fi
+          source services/snapshot-service.sh
 
-          chmod +x gradlew
-          ./gradlew --no-daemon --version
+          ofbiz_snapshot_service_require_environment() {
+            ofbiz_repository_init
+          }
+
+          ofbiz_snapshot_service_install 24.09
+
+          RUNTIME_PATH="$(ofbiz_repository_snapshot_path release24.09)"
+          JAVA_HOME="$(ofbiz_repository_jdks_dir)/temurin-17"
+
+          ofbiz_repository_install_is_valid             "$RUNTIME_PATH"             snapshot             release24.09             17
+
+          test "$(ofbiz_repository_current_path)" = "$RUNTIME_PATH"
+          test "$(ofbiz_repository_metadata_value "$RUNTIME_PATH" type)" = "snapshot"
+          test "$(ofbiz_repository_metadata_value "$RUNTIME_PATH" identifier)" = "release24.09"
+          test -d "$RUNTIME_PATH/.git"
+          test -x "$JAVA_HOME/bin/java"
+
+          cd "$RUNTIME_PATH"
+          export JAVA_HOME
+          export PATH="$JAVA_HOME/bin:$PATH"
           ./gradlew --no-daemon help
 
   doctor-smoke:

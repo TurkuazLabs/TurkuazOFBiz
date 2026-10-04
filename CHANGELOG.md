@@ -1,7 +1,7 @@
 # Dosya Yolu: /CHANGELOG.md
 # Amac: TurkuazOFBiz surumlerindeki kullaniciya donuk degisiklikleri kaydeder
 # View - Markdown
-# Version: 1.2.2
+# Version: 1.3.0
 # Aciklama: Semantic versioning tabanli proje degisiklik gecmisi
 #
 # Bagimli Oldugu Katman: View
@@ -11,6 +11,29 @@
 Tum dikkat cekici TurkuazOFBiz degisiklikleri bu dosyada kaydedilir.
 
 Surumleme Semantic Versioning mantigini izler.
+
+## [1.3.0] - 2026-10-04
+
+### Added
+
+- Release ve snapshot kurulumlari icin ayni filesystem uzerinde staging dizinleri.
+- Kurulum tamamlanmadan once gradlew, metadata, type, identifier ve Java major dogrulamasi.
+- Snapshot kurulumlarinda .git repository dogrulamasi.
+- Hedef dizin replacement sirasinda eski kurulumun backup/restore guvencesi.
+- CI runtime matrisi artik release-service katmanini gercek kurulum yolu ile test eder.
+- CI release24.09 snapshot kurulumunu snapshot-service katmani uzerinden gercek clone + JDK + Gradle ile test eder.
+
+### Changed
+
+- Release reinstall artik mevcut saglam kurulumu yeni staging kurulumu basariyla hazir olana kadar silmez.
+- Snapshot update artik mevcut checkout'u yerinde hard-reset etmek yerine yeni branch clone'unu staging'de hazirlayip atomik olarak degistirir.
+- release use ve snapshot use eksik metadata veya bozuk gradlew bulunan hedefleri aktive etmez.
+- current yolu gercek bir klasorse symlink ile sessizce ezilmeye calisilmaz.
+
+### Fixed
+
+- Yarim kalmis release/snapshot klasorlerinin yalnizca dizin varligi nedeniyle kurulu kabul edilmesi engellendi.
+- Basarisiz force reinstall veya snapshot update sonrasinda onceki saglam hedefin kaybedilme riski azaltildi.
 
 ## [1.2.2] - 2026-10-04
 

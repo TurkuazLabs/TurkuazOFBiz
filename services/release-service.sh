@@ -1,8 +1,8 @@
 # Dosya Yolu: /services/release-service.sh
 # Amac: Apache OFBiz resmi release kurulum is kurallarini yonetir
 # Service - Shell
-# Version: 1.0.1
-# Aciklama: Release secimi, JDK hazirlama, indirme, demo veri ve aktif surum islemlerini koordine eder
+# Version: 1.1.0
+# Aciklama: Release secimi, JDK, staging, atomik kurulum, demo veri ve aktif surum islemlerini koordine eder
 #
 # Bagimli Oldugu Katman: Service | Repo | Tool | Config
 
@@ -70,22 +70,36 @@ ofbiz_release_service_install() {
     java_major="$(ofbiz_required_java "${version}")"
     runtime_path="$(ofbiz_repository_release_path "${version}")"
 
-    if ofbiz_repository_exists "${runtime_path}" && [[ "${force_reinstall}" != "1" ]]; then
+    java_home="$(ofbiz_tool_install_temurin_jdk         "${java_major}"         "$(ofbiz_repository_jdks_dir)"         "${ADOPTIUM_API_BASE_URL}")"
+
+    if [[ "${force_reinstall}" != "1" ]]         && ofbiz_repository_install_is_valid             "${runtime_path}"             "${OFBIZ_TYPE_RELEASE}"             "${version}"             "${java_major}"; then
         ofbiz_repository_set_current "${runtime_path}"
         printf 'Release already installed and activated: %s\n' "${version}"
         return
     fi
 
-    java_home="$(ofbiz_tool_install_temurin_jdk         "${java_major}"         "$(ofbiz_repository_jdks_dir)"         "${ADOPTIUM_API_BASE_URL}")"
+    (
+        local staging_root
+        local staging_runtime
 
-    rm -rf "${runtime_path}"
+        staging_root="$(ofbiz_repository_create_staging_dir             "$(ofbiz_repository_releases_dir)"             "release-${version}")"
+        trap 'rm -rf -- "${staging_root}"' EXIT
 
-    ofbiz_tool_download_release         "${version}"         "${OFBIZ_CURRENT_BASE_URL}"         "${OFBIZ_ARCHIVE_BASE_URL}"         "$(ofbiz_repository_releases_dir)"
+        ofbiz_tool_download_release             "${version}"             "${OFBIZ_CURRENT_BASE_URL}"             "${OFBIZ_ARCHIVE_BASE_URL}"             "${staging_root}"
 
-    [[ -d "${runtime_path}" ]] || ofbiz_release_service_fail "Release extraction failed: ${runtime_path}"
+        staging_runtime="${staging_root}/${OFBIZ_RELEASE_DIR_PREFIX}${version}"
+        [[ -d "${staging_runtime}" ]]             || ofbiz_release_service_fail "Release extraction failed: ${staging_runtime}"
 
-    ofbiz_release_service_prepare_runtime "${runtime_path}" "${java_home}"
-    ofbiz_repository_write_metadata "${runtime_path}" "${OFBIZ_TYPE_RELEASE}" "${version}" "${java_major}"
+        ofbiz_release_service_prepare_runtime "${staging_runtime}" "${java_home}"
+        ofbiz_repository_write_metadata             "${staging_runtime}"             "${OFBIZ_TYPE_RELEASE}"             "${version}"             "${java_major}"
+
+        ofbiz_repository_install_is_valid             "${staging_runtime}"             "${OFBIZ_TYPE_RELEASE}"             "${version}"             "${java_major}"             || ofbiz_release_service_fail "Staged release validation failed: ${version}"
+
+        ofbiz_repository_replace_directory "${staging_runtime}" "${runtime_path}"             || ofbiz_release_service_fail "Atomic release replacement failed: ${version}"
+    )
+
+    ofbiz_repository_install_is_valid         "${runtime_path}"         "${OFBIZ_TYPE_RELEASE}"         "${version}"         "${java_major}"         || ofbiz_release_service_fail "Installed release validation failed: ${version}"
+
     ofbiz_repository_set_current "${runtime_path}"
 
     printf 'Installed release: %s\n' "${version}"
@@ -102,14 +116,17 @@ ofbiz_release_service_installed() {
 ofbiz_release_service_use() {
     local requested="${1:?version required}"
     local version
+    local java_major
     local runtime_path
 
     ofbiz_tool_require_root || ofbiz_release_service_fail "Root permission is required."
 
     version="$(ofbiz_resolve_version "${requested}")"
+    java_major="$(ofbiz_required_java "${version}")"
     runtime_path="$(ofbiz_repository_release_path "${version}")"
 
-    ofbiz_repository_exists "${runtime_path}" || ofbiz_release_service_fail "Release is not installed: ${version}"
+    ofbiz_repository_install_is_valid         "${runtime_path}"         "${OFBIZ_TYPE_RELEASE}"         "${version}"         "${java_major}"         || ofbiz_release_service_fail "Release is incomplete or not installed: ${version}"
+
     ofbiz_repository_set_current "${runtime_path}"
 
     printf 'Active release: %s\n' "${version}"

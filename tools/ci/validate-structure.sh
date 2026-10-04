@@ -1,7 +1,7 @@
 # Dosya Yolu: /tools/ci/validate-structure.sh
 # Amac: TurkuazOFBiz konfigurasyon yapisinin syntax, katman, resolver ve release metadata testlerini calistirir
 # Tool - Shell
-# Version: 1.6.0
+# Version: 1.7.0
 # Aciklama: CI icin ag gerektirmeyen syntax, katman, release/snapshot, Docker image ve proje surum testleri
 #
 # Bagimli Oldugu Katman: Tool | Controller | Service | Repo | View | Language | Config
@@ -119,6 +119,70 @@ EOF
     rm -rf "${work_dir}"
 }
 
+validate_install_repository_atomic_helpers() (
+    local test_root
+    local release_path
+    local staging_root
+    local staged_path
+    local snapshot_path
+
+    test_root="$(mktemp -d)"
+    trap 'rm -rf -- "${test_root}"' EXIT
+    export OFBIZ_INSTALL_ROOT="${test_root}"
+
+    # shellcheck source=/dev/null
+    source "${OFBIZ_ROOT_DIR}/repositories/install-repository.sh"
+
+    ofbiz_repository_init
+
+    release_path="$(ofbiz_repository_release_path 99.99.99)"
+    mkdir -p "${release_path}"
+    touch "${release_path}/gradlew"
+    chmod +x "${release_path}/gradlew"
+    printf 'old\n' > "${release_path}/marker"
+    ofbiz_repository_write_metadata "${release_path}" release 99.99.99 17
+
+    ofbiz_repository_install_is_valid "${release_path}" release 99.99.99 17         || fail "Valid release repository was rejected"
+
+    if ofbiz_repository_install_is_valid "${release_path}" release 99.99.99 8; then
+        fail "Release repository accepted wrong Java metadata"
+    fi
+
+    staging_root="$(ofbiz_repository_create_staging_dir "$(ofbiz_repository_releases_dir)" test-release)"
+    staged_path="${staging_root}/replacement"
+    mkdir -p "${staged_path}"
+    touch "${staged_path}/gradlew"
+    chmod +x "${staged_path}/gradlew"
+    printf 'new\n' > "${staged_path}/marker"
+    ofbiz_repository_write_metadata "${staged_path}" release 99.99.99 17
+
+    ofbiz_repository_replace_directory "${staged_path}" "${release_path}"         || fail "Atomic repository replacement failed"
+
+    assert_equals "new" "$(cat "${release_path}/marker")" "atomic replacement marker"
+
+    mkdir -p "$(ofbiz_repository_current_link)"
+    if ofbiz_repository_set_current "${release_path}" 2>/dev/null; then
+        fail "Current path directory must not be overwritten by symlink"
+    fi
+    rm -rf "$(ofbiz_repository_current_link)"
+
+    ofbiz_repository_set_current "${release_path}"
+    assert_equals "${release_path}" "$(ofbiz_repository_current_path)" "current symlink"
+
+    snapshot_path="$(ofbiz_repository_snapshot_path release24.09)"
+    mkdir -p "${snapshot_path}/.git"
+    touch "${snapshot_path}/gradlew"
+    chmod +x "${snapshot_path}/gradlew"
+    ofbiz_repository_write_metadata "${snapshot_path}" snapshot release24.09 17
+
+    ofbiz_repository_install_is_valid "${snapshot_path}" snapshot release24.09 17         || fail "Valid snapshot repository was rejected"
+
+    rm -rf "${snapshot_path}/.git"
+    if ofbiz_repository_install_is_valid "${snapshot_path}" snapshot release24.09 17; then
+        fail "Snapshot repository accepted missing .git metadata"
+    fi
+)
+
 validate_resolvers() {
     # shellcheck source=/dev/null
     source "${OFBIZ_ROOT_DIR}/services/version-resolver.sh"
@@ -166,6 +230,7 @@ main() {
     validate_directories
     validate_release_metadata
     validate_release_checksum_parser
+    validate_install_repository_atomic_helpers
     validate_bash_syntax
     validate_headers
     validate_resolvers

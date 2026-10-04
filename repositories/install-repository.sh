@@ -1,8 +1,8 @@
 # Dosya Yolu: /repositories/install-repository.sh
 # Amac: OFBiz release ve snapshot kurulumlarinin dosya sistemi durumunu yonetir
 # Repo - Shell
-# Version: 1.1.0
-# Aciklama: Kurulum dizinleri, metadata, aktif symlink ve kurulu hedef sorgularini yonetir
+# Version: 1.2.0
+# Aciklama: Kurulum dizinleri, metadata, staging, atomik replacement ve aktif symlink durumunu yonetir
 #
 # Bagimli Oldugu Katman: Repo | Config
 
@@ -53,6 +53,7 @@ ofbiz_repository_snapshot_safe_name() {
 ofbiz_repository_snapshot_path() {
     local branch="${1:?branch required}"
     local safe_name
+
     safe_name="$(ofbiz_repository_snapshot_safe_name "${branch}")"
     printf '%s/%s%s\n' "$(ofbiz_repository_snapshots_dir)" "${OFBIZ_SNAPSHOT_DIR_PREFIX}" "${safe_name}"
 }
@@ -73,11 +74,18 @@ ofbiz_repository_set_current() {
     [[ -d "${path}" ]] || return 1
 
     current_link="$(ofbiz_repository_current_link)"
+
+    if [[ -e "${current_link}" && ! -L "${current_link}" ]]; then
+        printf '[install-repository] ERROR: Current path exists and is not a symlink: %s\n' "${current_link}" >&2
+        return 1
+    fi
+
     ln -sfn "${path}" "${current_link}"
 }
 
 ofbiz_repository_current_path() {
     local current_link
+
     current_link="$(ofbiz_repository_current_link)"
 
     [[ -L "${current_link}" ]] || return 1
@@ -107,9 +115,60 @@ ofbiz_repository_metadata_value() {
     sed -n "s/^${key}=//p" "${metadata_file}" | head -n 1
 }
 
+ofbiz_repository_install_is_valid() {
+    local path="${1:?path required}"
+    local type="${2:?type required}"
+    local identifier="${3:?identifier required}"
+    local java_major="${4:?java major required}"
+
+    [[ -d "${path}" ]] || return 1
+    [[ -x "${path}/gradlew" ]] || return 1
+    [[ "$(ofbiz_repository_metadata_value "${path}" type 2>/dev/null || true)" == "${type}" ]] || return 1
+    [[ "$(ofbiz_repository_metadata_value "${path}" identifier 2>/dev/null || true)" == "${identifier}" ]] || return 1
+    [[ "$(ofbiz_repository_metadata_value "${path}" java_major 2>/dev/null || true)" == "${java_major}" ]] || return 1
+
+    if [[ "${type}" == "${OFBIZ_TYPE_SNAPSHOT}" ]]; then
+        [[ -d "${path}/.git" ]] || return 1
+    fi
+}
+
+ofbiz_repository_create_staging_dir() {
+    local parent_dir="${1:?parent dir required}"
+    local label="${2:?label required}"
+
+    mkdir -p "${parent_dir}"
+    mktemp -d "${parent_dir}/.${label}.staging.XXXXXX"
+}
+
+ofbiz_repository_replace_directory() {
+    local source_path="${1:?source path required}"
+    local target_path="${2:?target path required}"
+    local backup_path=""
+
+    [[ -d "${source_path}" ]] || return 1
+
+    if [[ -e "${target_path}" || -L "${target_path}" ]]; then
+        backup_path="${target_path}.backup.$$"
+        rm -rf -- "${backup_path}"
+        mv -- "${target_path}" "${backup_path}"
+    fi
+
+    if mv -- "${source_path}" "${target_path}"; then
+        [[ -z "${backup_path}" ]] || rm -rf -- "${backup_path}"
+        return 0
+    fi
+
+    if [[ -n "${backup_path}" && -e "${backup_path}" ]]; then
+        mv -- "${backup_path}" "${target_path}" || true
+    fi
+
+    return 1
+}
+
 ofbiz_repository_list_releases() {
     local releases_dir
     local item
+
     releases_dir="$(ofbiz_repository_releases_dir)"
 
     [[ -d "${releases_dir}" ]] || return 0
@@ -124,6 +183,7 @@ ofbiz_repository_list_snapshots() {
     local snapshots_dir
     local item
     local identifier
+
     snapshots_dir="$(ofbiz_repository_snapshots_dir)"
 
     [[ -d "${snapshots_dir}" ]] || return 0

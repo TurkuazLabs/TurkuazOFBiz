@@ -1,7 +1,7 @@
 # Dosya Yolu: /views/ARCHITECTURE.md
 # Amac: OFBiz konfigurasyon araclarinin katmanli mimarisini ve sorumluluk sinirlarini dokumante eder
 # View - Markdown
-# Version: 1.3.0
+# Version: 1.4.0
 # Aciklama: Release, snapshot, runtime ve Docker akislarinin katman bagimliliklarini aciklar
 #
 # Bagimli Oldugu Katman: View | Controller | Service | Repo | Tool | Language | Config
@@ -38,7 +38,7 @@ Controller yalnizca CLI routing yapar.
 
 Service is kurallarini ve akislari koordine eder.
 
-Repository kurulum storage'i, metadata, image referansi ve container adlandirma bilgisini yonetir.
+Repository kurulum storage'i, metadata, staging dizinleri, atomik directory replacement, aktif symlink, image referansi ve container adlandirma bilgisini yonetir.
 
 Tool Git, Curl, Java, Gradle ve Docker CLI gibi dis sistem adaptorlerini kapsar.
 
@@ -47,6 +47,12 @@ Doctor Service kurulum yapmadan local komutlari, release kaynaklarini, Adoptium 
 Config release/snapshot kataloglari, dis kaynaklar, Docker tag'leri ve runtime sabitlerini tutar.
 
 View ve Language kullaniciya gosterilen yardim/dokumantasyon katmanidir.
+
+## Atomik kurulum
+
+Release ve snapshot Service katmanlari yeni runtime'i once Repository tarafindan olusturulan staging dizininde hazirlar. gradlew ve metadata dogrulamasi tamamlanmadan final hedef degistirilmez.
+
+Snapshot update yerinde hard reset yerine yeni branch clone'unu staging'de hazirlayarak calisir. Replacement sirasinda mevcut hedef gecici backup ile korunur ve tasima hatasinda restore edilmeye calisilir.
 
 ## Docker karari
 

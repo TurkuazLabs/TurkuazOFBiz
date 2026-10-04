@@ -1,7 +1,7 @@
 # Dosya Yolu: /README.md
 # Amac: TurkuazOFBiz projesinin ana giris, kurulum ve kullanim rehberini sunar
 # View - Markdown
-# Version: 3.4.1
+# Version: 3.5.0
 # Aciklama: Apache OFBiz release, snapshot, runtime ve Docker yonetim araclarini tanitir
 #
 # Bagimli Oldugu Katman: View | Controller | Service | Repo | Tool | Language | Config
@@ -11,7 +11,7 @@
 [![CI](https://github.com/TurkuazLabs/TurkuazOFBiz/actions/workflows/ofbiz-config-ci.yml/badge.svg)](https://github.com/TurkuazLabs/TurkuazOFBiz/actions/workflows/ofbiz-config-ci.yml)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 
-**Current version:** v1.2.2
+**Current version:** v1.3.0
 
 TurkuazOFBiz, Apache OFBiz release ve branch tabanli snapshot hedeflerini ayni arabirimden yonetmek icin gelistirilen acik kaynak yonetim aracidir.
 
@@ -39,6 +39,14 @@ bash controllers/ofbiz.sh doctor docker
 ~~~
 
 Doctor PASS, WARN ve FAIL sonuclari verir. Kritik hata varsa non-zero exit code dondurur.
+
+## Guvenli kurulum modeli
+
+Release ve snapshot kurulumlari staging dizininde hazirlanir. Metadata ve runtime dogrulamasi basarili olmadan mevcut hedef degistirilmez. Yarim kalmis bir klasor kurulu kabul edilmez.
+
+~~~text
+download/clone -> staging -> JDK/Gradle hazirlik -> metadata validation -> atomic replacement -> current symlink
+~~~
 
 ## Release
 
@@ -136,9 +144,10 @@ Docker tag resolver testleri
 release metadata tutarliligi
 gercek 24.09.07 ZIP + SHA-512 dogrulamasi
 doctor ag/sistem smoke kontrolleri
-17.12.09 + Temurin 8 + Gradle runtime testi
-18.12.19 + Temurin 8 + Gradle runtime testi
-24.09.07 + Temurin 17 + Gradle runtime testi
+17.12.09 + Temurin 8 + release-service install/Gradle testi
+18.12.19 + Temurin 8 + release-service install/Gradle testi
+24.09.07 + Temurin 17 + release-service install/Gradle testi
+release24.09 + Temurin 17 + snapshot-service install/Gradle testi
 17.12.09 Dockerfile.compat + Java 8 + HTTPS demo container testi
 resmi GHCR manifest kontrolleri
 24.09.07 preloaddemo gercek HTTPS smoke testi
