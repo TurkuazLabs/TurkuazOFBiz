@@ -1,24 +1,28 @@
 # Dosya Yolu: /RELEASE_NOTES.md
-# Amac: TurkuazOFBiz v1.4.1 GitHub release notlarini hazirlar
+# Amac: TurkuazOFBiz v1.4.2 GitHub release notlarini hazirlar
 # View - Markdown
-# Version: 1.4.1
-# Aciklama: Windows masaustu kisayolunun start davranisini duzeltir
+# Version: 1.4.2
+# Aciklama: Windows LOCALAPPDATA yolunun WSL icine guvenilir aktarimini duzeltir
 #
 # Bagimli Oldugu Katman: View | Tool
 
-# TurkuazOFBiz v1.4.1
+# TurkuazOFBiz v1.4.2
 
-Bu patch surumu Windows tek tik kullanimini duzeltir.
+Bu patch Windows PowerShell installer'in WSL yol donusum hatasini duzeltir.
 
 ## Fixed
 
-Kurulum sonrasi olusturulan masaustu TurkuazOFBiz kisayolu artik install action yerine start action ile calisir.
+v1.4.1 installer Windows tarafindaki su tip yolu:
 
-Bunun sonucu:
+C:\Users\<user>\AppData\Local\TurkuazOFBiz\repo
 
-- Mevcut OFBiz container zaten varsa yeniden kurulum yapilmaz.
-- Durdurulmus container baslatilir.
-- Tarayici otomatik acilir.
-- Container henuz yoksa start action otomatik olarak tam kuruluma geri doner.
+dogrudan wslpath komutuna arguman olarak aktariyordu. Bazi Windows/WSL kurulumlarinda bu arguman beklenen bicimde WSL tarafina ulasmadigi icin installer OFBiz kurulumuna baslamadan durabiliyordu.
 
-Ilk kurulum icin yine TurkuazOFBiz-Installer.bat dosyasina cift tiklamak yeterlidir.
+v1.4.2 ile:
+
+- Standart Windows drive path'i /mnt/<drive>/... bicimine cevrilir.
+- Olusan dizinin secilen WSL dagitimi icinde gercekten var oldugu kontrol edilir.
+- Standart /mnt yapisi kullanilmiyorsa WSLENV path translation fallback'i devreye girer.
+- Dogrudan wslpath bagimliligi kaldirilmistir.
+
+Installer yeniden calistirildiginda mevcut yonetilen repo dizinini guncel stabil release ile senkronize eder.

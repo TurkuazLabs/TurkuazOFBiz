@@ -1,7 +1,7 @@
 # Dosya Yolu: /CHANGELOG.md
 # Amac: TurkuazOFBiz surumlerindeki kullaniciya donuk degisiklikleri kaydeder
 # View - Markdown
-# Version: 1.4.1
+# Version: 1.4.2
 # Aciklama: Semantic versioning tabanli proje degisiklik gecmisi
 #
 # Bagimli Oldugu Katman: View
@@ -11,6 +11,16 @@
 Tum dikkat cekici TurkuazOFBiz degisiklikleri bu dosyada kaydedilir.
 
 Surumleme Semantic Versioning mantigini izler.
+
+## [1.4.2] - 2026-10-04
+
+### Fixed
+
+- Windows installer'daki LOCALAPPDATA yolunun WSL yoluna cevrilmesinde dogrudan wslpath cagrisi kaldirildi.
+- Standart WSL mount yapisinda C:\ yolu dogrudan /mnt/c/ yoluna cevrilir ve WSL icinde varligi dogrulanir.
+- Standart mount disinda WSLENV /p path translation fallback'i kullanilir.
+- Ubuntu-24.04 ortaminda Windows yolu arguman aktarimindan kaynaklanan "Windows yolu WSL yoluna cevrilemedi" hatasi giderildi.
+- CI installer'in tekrar dogrudan wslpath kullanmasini engelleyen regression kontrolleri ekledi.
 
 ## [1.4.1] - 2026-10-04
 
