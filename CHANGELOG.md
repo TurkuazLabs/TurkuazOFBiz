@@ -1,7 +1,7 @@
 # Dosya Yolu: /CHANGELOG.md
 # Amac: TurkuazOFBiz surumlerindeki kullaniciya donuk degisiklikleri kaydeder
 # View - Markdown
-# Version: 1.2.1
+# Version: 1.2.2
 # Aciklama: Semantic versioning tabanli proje degisiklik gecmisi
 #
 # Bagimli Oldugu Katman: View
@@ -11,6 +11,26 @@
 Tum dikkat cekici TurkuazOFBiz degisiklikleri bu dosyada kaydedilir.
 
 Surumleme Semantic Versioning mantigini izler.
+
+## [1.2.2] - 2026-10-04
+
+### Fixed
+
+- Legacy Docker compat runtime ile modern Apache Docker entrypoint davranisi kesin olarak ayrildi.
+- Eski 17.12/18.12 compat image'larinda modern OFBIZ_ADMIN_PASSWORD, OFBIZ_DATA_LOAD ve modern volume davranisinin zorla uygulanmasi engellendi.
+- Legacy compat container calistirmada preloaded demo varyanti zorunlu hale getirildi.
+- 17.12.09 demo compat image gercek HTTPS /webtools smoke testiyle dogrulandi.
+
+### Changed
+
+- Release sonrasinda ayni VERSION ile yeni commit yapilmasini engelleyen CI surum-drift kontrolu eklendi.
+- Yayinlanmis bir vX.Y.Z tag'i farkli commit'e aitse main/PR CI artik yeni version bump isteyecek.
+
+### Verified
+
+- 17.12.09 + Java 8 compat Docker demo image build ve HTTPS smoke testi basarili.
+- 17.12.09, 18.12.19 ve 24.09.07 runtime matrisi korunur.
+- Doctor, release ZIP checksum ve modern Docker smoke testleri korunur.
 
 ## [1.2.1] - 2026-10-04
 

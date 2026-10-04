@@ -1,33 +1,40 @@
 # Dosya Yolu: /RELEASE_NOTES.md
-# Amac: TurkuazOFBiz v1.2.1 GitHub release notlarini hazirlar
+# Amac: TurkuazOFBiz v1.2.2 GitHub release notlarini hazirlar
 # View - Markdown
-# Version: 1.2.1
-# Aciklama: Legacy Docker compat Java major aktarim duzeltmesini ozetler
+# Version: 1.2.2
+# Aciklama: Legacy Docker runtime ayrimi ve surum-drift guvencesini ozetler
 #
 # Bagimli Oldugu Katman: View
 
-# TurkuazOFBiz v1.2.1
+# TurkuazOFBiz v1.2.2
 
-Bu patch surumu eski OFBiz release'lerinin local Docker build yolundaki Java major aktarimini duzeltir.
+Bu patch surumu v1.2.1 sonrasinda tamamlanan legacy Docker runtime ayrimini resmi surume dahil eder ve release/version tutarliligini CI seviyesinde korur.
 
 ## Fixed
 
-17.12 serisinde resmi Dockerfile bulunmadigi icin TurkuazOFBiz Dockerfile.compat kullanir. Compat Dockerfile varsayilan olarak Java 17 ile basladigindan, Java 8 gerektiren 17.12 local build'i yanlis JDK ile olusturulabiliyordu.
+Legacy Dockerfile.compat image'lari modern Apache OFBiz image'lariyla ayni entrypoint modeline sahip degildir. v1.2.2 ile:
 
-v1.2.1 ile:
+- Legacy compat container'a modern OFBIZ_ADMIN_PASSWORD ve OFBIZ_DATA_LOAD davranisi zorla uygulanmaz.
+- Modern Apache volume mountlari legacy compat image'a zorla eklenmez.
+- Legacy compat run yolu preloaded demo varyantini zorunlu tutar.
+- 17.12.09 image icindeki Java 8 dogrulanir.
+- Gercek container /webtools HTTPS endpoint'i ile smoke test edilir.
 
-- Legacy Gradle wrapper'in bekledigi shasum komutu sha1sum'a normalize edilir.
-- Docker build gecici dizin cleanup'i hata durumunda da guvenli calisir.
-- Compat Docker build Java major degerini version resolver'dan alir.
-- 17.12.x -> Java 8
-- 18.12.x -> Java 8
-- 24.09.x -> Java 17
-- Snapshot hedefleri -> ilgili snapshot Java mapping'i
+## Release integrity
 
-Compat image'lar label ile algilanir. Modern Apache Docker entrypoint'ine ait OFBIZ_ADMIN_PASSWORD, OFBIZ_DATA_LOAD ve modern volume davranisi eski 17.12 image'ina zorla uygulanmaz. Legacy container icin preloaded demo varyanti kullanilir.
+CI artik VERSION degerinin mevcut Git tag'i ile commit seviyesinde tutarli olup olmadigini kontrol eder.
 
-Resmi Dockerfile mevcutsa Apache'in kendi Dockerfile'i degistirilmeden kullanilmaya devam eder.
+Ornegin v1.2.2 zaten bir committe yayinlanmissa, VERSION hala 1.2.2 iken yeni bir main commit CI'dan gecemez. Yeni degisiklik icin 1.2.3 veya uygun sonraki surume bump gerekir.
+
+Bu sayede GitHub Release, tag ve main kodu arasinda sessiz surum drift'i engellenir.
 
 ## Validation
 
-CI Docker Java mapping'lerini statik olarak kontrol eder. Ayrica 17.12.09 icin gercek Dockerfile.compat demo image loadAll ile build edilir, image icindeki Java'nin 1.8 oldugu dogrulanir, container baslatilir ve /webtools HTTPS endpoint'i smoke test edilir. Mevcut release runtime matrisi, Doctor ve modern Docker smoke testleri de korunur.
+- Statik mimari, Bash syntax ve ShellCheck.
+- 17.12.09 + Temurin 8 + Gradle runtime matrisi.
+- 18.12.19 + Temurin 8 + Gradle runtime matrisi.
+- 24.09.07 + Temurin 17 + Gradle runtime matrisi.
+- Gercek Apache ZIP + SHA-512 dogrulamasi.
+- Doctor smoke.
+- 17.12.09 legacy compat Docker demo build + HTTPS smoke.
+- 24.09.07 resmi Docker HTTPS smoke.
