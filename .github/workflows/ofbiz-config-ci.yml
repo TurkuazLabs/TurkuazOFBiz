@@ -1,7 +1,7 @@
 # Dosya Yolu: /.github/workflows/ofbiz-config-ci.yml
 # Amac: TurkuazOFBiz araclarinin statik, release matrisi, doctor ve Docker dogrulamalarini calistirir
 # Tool - YAML
-# Version: 2.9.4
+# Version: 2.9.5
 # Aciklama: Syntax, ShellCheck, release metadata, gercek release/JDK/Gradle matrisi ve Docker testlerini kosar
 #
 # Bagimli Oldugu Katman: Tool | Controller | Service | Repo | Config
@@ -87,7 +87,7 @@ jobs:
           grep -Fq "TurkuazOFBiz-Installer.ps1" install.bat
           grep -Fq "releases/latest/download" install.bat
           ! grep -Fq -- "-- wslpath" install.ps1
-          grep -Fq '"/mnt/$drive/$tail"' install.ps1
+          grep -Fq '"/mnt/$drive/$relative"' install.ps1
 
       - name: Validate PowerShell installer
         shell: pwsh
