@@ -1,7 +1,7 @@
 # Dosya Yolu: /tools/docker-tool.sh
 # Amac: Docker CLI islemlerini OFBiz Service katmani icin adaptor olarak sunar
 # Tool - Shell
-# Version: 1.0.1
+# Version: 1.1.0
 # Aciklama: Image pull/build, container run/stop/status, manifest ve HTTPS smoke test islemlerini yonetir
 #
 # Bagimli Oldugu Katman: Tool
@@ -28,8 +28,14 @@ ofbiz_docker_tool_build() {
     local image="${2:?image required}"
     local variant="${3:?variant required}"
     local dockerfile="${4:-${source_dir}/Dockerfile}"
+    local java_major="${5:-}"
+    local build_args=()
 
-    DOCKER_BUILDKIT=1 docker build         --target "${variant}"         --file "${dockerfile}"         --tag "${image}"         "${source_dir}"
+    if [[ -n "${java_major}" ]]; then
+        build_args+=(--build-arg "JAVA_MAJOR=${java_major}")
+    fi
+
+    DOCKER_BUILDKIT=1 docker build         "${build_args[@]}"         --target "${variant}"         --file "${dockerfile}"         --tag "${image}"         "${source_dir}"
 }
 
 ofbiz_docker_tool_run() {

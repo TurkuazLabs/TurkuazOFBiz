@@ -1,7 +1,7 @@
 # Dosya Yolu: /README.md
 # Amac: TurkuazOFBiz projesinin ana giris, kurulum ve kullanim rehberini sunar
 # View - Markdown
-# Version: 3.3.0
+# Version: 3.3.1
 # Aciklama: Apache OFBiz release, snapshot, runtime ve Docker yonetim araclarini tanitir
 #
 # Bagimli Oldugu Katman: View | Controller | Service | Repo | Tool | Language | Config
@@ -11,7 +11,7 @@
 [![CI](https://github.com/TurkuazLabs/TurkuazOFBiz/actions/workflows/ofbiz-config-ci.yml/badge.svg)](https://github.com/TurkuazLabs/TurkuazOFBiz/actions/workflows/ofbiz-config-ci.yml)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 
-**Current version:** v1.2.0
+**Current version:** v1.2.1
 
 TurkuazOFBiz, Apache OFBiz release ve branch tabanli snapshot hedeflerini ayni arabirimden yonetmek icin gelistirilen acik kaynak yonetim aracidir.
 
@@ -79,7 +79,10 @@ Herhangi bir release'i kaynaktan build etmek de mumkundur:
 
 ~~~bash
 bash controllers/ofbiz.sh docker build release 18.12.10 runtime
+bash controllers/ofbiz.sh docker build release 17.12.09 runtime
 ~~~
+
+Resmi Dockerfile'i olmayan eski release'lerde Dockerfile.compat kullanilir ve gerekli Java major surumu release katalogundan otomatik aktarilir.
 
 ## Docker calistirma
 

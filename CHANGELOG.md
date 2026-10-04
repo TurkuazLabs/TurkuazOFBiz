@@ -1,7 +1,7 @@
 # Dosya Yolu: /CHANGELOG.md
 # Amac: TurkuazOFBiz surumlerindeki kullaniciya donuk degisiklikleri kaydeder
 # View - Markdown
-# Version: 1.2.0
+# Version: 1.2.1
 # Aciklama: Semantic versioning tabanli proje degisiklik gecmisi
 #
 # Bagimli Oldugu Katman: View
@@ -11,6 +11,20 @@
 Tum dikkat cekici TurkuazOFBiz degisiklikleri bu dosyada kaydedilir.
 
 Surumleme Semantic Versioning mantigini izler.
+
+## [1.2.1] - 2026-10-04
+
+### Fixed
+
+- Dockerfile.compat kullanan eski release build'lerinde Java major artik release/snapshot resolver'dan Docker build arg olarak aktarilir.
+- 17.12.x local Docker build'inin yanlislikla varsayilan Java 17 kullanmasi engellendi.
+- Compat Docker build yolu 17.12=Java 8, 18.12=Java 8 ve 24.09/snapshot=Java 17 olarak statik CI testleriyle sabitlendi.
+
+### Verified
+
+- Apache release17.12 kaynaginda Dockerfile bulunmadigi ve compat fallback gerektigi dogrulandi.
+- Apache release18.12 Dockerfile'inin kendi icinde Eclipse Temurin 8 kullandigi dogrulandi.
+- Modern Apache Docker volume yollarinin /ofbiz/config, /ofbiz/runtime, /ofbiz/lib-extra ve /docker-entrypoint-hooks oldugu kaynak Dockerfile ile dogrulandi.
 
 ## [1.2.0] - 2026-10-04
 

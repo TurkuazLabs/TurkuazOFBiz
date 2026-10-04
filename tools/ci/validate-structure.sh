@@ -1,7 +1,7 @@
 # Dosya Yolu: /tools/ci/validate-structure.sh
 # Amac: TurkuazOFBiz konfigurasyon yapisinin syntax, katman, resolver ve release metadata testlerini calistirir
 # Tool - Shell
-# Version: 1.5.0
+# Version: 1.6.0
 # Aciklama: CI icin ag gerektirmeyen syntax, katman, release/snapshot, Docker image ve proje surum testleri
 #
 # Bagimli Oldugu Katman: Tool | Controller | Service | Repo | View | Language | Config
@@ -126,15 +126,21 @@ validate_resolvers() {
     source "${OFBIZ_ROOT_DIR}/services/snapshot-resolver.sh"
     # shellcheck source=/dev/null
     source "${OFBIZ_ROOT_DIR}/repositories/docker-repository.sh"
+    # shellcheck source=/dev/null
+    source "${OFBIZ_ROOT_DIR}/services/docker-service.sh"
 
     assert_equals "24.09.07" "$(ofbiz_resolve_version latest)" "latest release"
     assert_equals "18.12.19" "$(ofbiz_resolve_version 18.12)" "18.12 release alias"
     assert_equals "17" "$(ofbiz_required_java 24.09.07)" "24.09 Java"
+    assert_equals "8" "$(ofbiz_docker_service_required_java release 17.12.09)" "17.12 Docker Java"
+    assert_equals "8" "$(ofbiz_docker_service_required_java release 18.12.19)" "18.12 Docker Java"
+    assert_equals "17" "$(ofbiz_docker_service_required_java release 24.09.07)" "24.09 Docker Java"
 
     assert_equals "trunk" "$(ofbiz_snapshot_resolve_branch trunk)" "trunk snapshot"
     assert_equals "release24.09" "$(ofbiz_snapshot_resolve_branch 24.09)" "24.09 snapshot"
     assert_equals "release22.01" "$(ofbiz_snapshot_resolve_branch 22.01)" "22.01 snapshot"
     assert_equals "17" "$(ofbiz_snapshot_required_java release22.01)" "22.01 Java"
+    assert_equals "17" "$(ofbiz_docker_service_required_java snapshot release22.01)" "22.01 Docker Java"
 
     assert_equals         "ghcr.io/apache/ofbiz:24.09.07"         "$(ofbiz_docker_repository_release_official_image 24.09.07 runtime)"         "release runtime image"
 

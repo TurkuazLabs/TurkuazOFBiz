@@ -1,45 +1,29 @@
 # Dosya Yolu: /RELEASE_NOTES.md
-# Amac: TurkuazOFBiz v1.2.0 GitHub release notlarini hazirlar
+# Amac: TurkuazOFBiz v1.2.1 GitHub release notlarini hazirlar
 # View - Markdown
-# Version: 1.2.0
-# Aciklama: Desteklenen sabit OFBiz release serileri icin gercek runtime CI matrisini ozetler
+# Version: 1.2.1
+# Aciklama: Legacy Docker compat Java major aktarim duzeltmesini ozetler
 #
 # Bagimli Oldugu Katman: View
 
-# TurkuazOFBiz v1.2.0
+# TurkuazOFBiz v1.2.1
 
-v1.2.0 destekledigimiz sabit OFBiz serilerini gercek release paketleri ve gercek Java surumleriyle CI seviyesinde dogrular.
+Bu patch surumu eski OFBiz release'lerinin local Docker build yolundaki Java major aktarimini duzeltir.
 
-## Release runtime matrix
+## Fixed
 
-CI artik asagidaki matrisi gercekten calistirir:
+17.12 serisinde resmi Dockerfile bulunmadigi icin TurkuazOFBiz Dockerfile.compat kullanir. Compat Dockerfile varsayilan olarak Java 17 ile basladigindan, Java 8 gerektiren 17.12 local build'i yanlis JDK ile olusturulabiliyordu.
 
-~~~text
-OFBiz 17.12.09 -> Temurin JDK 8
-OFBiz 18.12.19 -> Temurin JDK 8
-OFBiz 24.09.07 -> Temurin JDK 17
-~~~
+v1.2.1 ile:
 
-Her hedef icin:
+- Compat Docker build Java major degerini version resolver'dan alir.
+- 17.12.x -> Java 8
+- 18.12.x -> Java 8
+- 24.09.x -> Java 17
+- Snapshot hedefleri -> ilgili snapshot Java mapping'i
 
-1. Resmi Apache ZIP indirilir.
-2. Resmi SHA-512 dogrulanir.
-3. TurkuazOFBiz Java Tool ile izole Temurin JDK indirilir ve SHA-256 dogrulanir.
-4. JAVA_HOME sadece ilgili test icin ayarlanir.
-5. OFBiz Gradle wrapper hazirlanir.
-6. Gradle surumu calistirilir.
-7. Gradle build script help gorevi ile yuklenir.
+Resmi Dockerfile mevcutsa Apache'in kendi Dockerfile'i degistirilmeden kullanilmaya devam eder.
 
-Bu test sadece katalogda bir surum bulunmasini degil, release paketinin secilen Java ile Gradle seviyesinde gercekten acilabildigini kontrol eder.
+## Validation
 
-## Catalog verification
-
-Apache'in resmi release/archive listeleri ile TurkuazOFBiz katalogu karsilastirildi:
-
-- 17.12.01 - 17.12.09
-- 18.12.01 - 18.12.19
-- 24.09.01 - 24.09.07
-
-## Compatibility
-
-Mevcut CLI, Docker ve doctor komutlari degismemistir.
+CI Docker Java mapping'lerini statik olarak kontrol eder ve mevcut release runtime matrisi, Doctor ve Docker smoke testleri korunur.

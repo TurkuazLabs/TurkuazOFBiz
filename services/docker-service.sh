@@ -1,7 +1,7 @@
 # Dosya Yolu: /services/docker-service.sh
 # Amac: OFBiz release ve snapshot Docker image/container is kurallarini yonetir
 # Service - Shell
-# Version: 1.0.1
+# Version: 1.1.0
 # Aciklama: Resmi image pull, kaynak koddan build, container run ve smoke test akislarini koordine eder
 #
 # Bagimli Oldugu Katman: Service | Repo | Tool | Config
@@ -58,6 +58,23 @@ ofbiz_docker_service_resolve() {
     esac
 
     printf '%s\n' "${identifier}"
+}
+
+ofbiz_docker_service_required_java() {
+    local type="${1:?type required}"
+    local identifier="${2:?identifier required}"
+
+    case "${type}" in
+        release)
+            ofbiz_required_java "${identifier}"
+            ;;
+        snapshot)
+            ofbiz_snapshot_required_java "${identifier}"
+            ;;
+        *)
+            return 1
+            ;;
+    esac
 }
 
 ofbiz_docker_service_official_image() {
@@ -123,6 +140,7 @@ ofbiz_docker_service_build() {
     local work_dir
     local source_dir
     local dockerfile
+    local java_major=""
 
     ofbiz_docker_service_require
 
@@ -146,9 +164,10 @@ ofbiz_docker_service_build() {
 
     if [[ ! -f "${dockerfile}" ]]; then
         dockerfile="${DOCKER_SERVICE_ROOT}/tools/docker/Dockerfile.compat"
+        java_major="$(ofbiz_docker_service_required_java "${type}" "${identifier}")"
     fi
 
-    ofbiz_docker_tool_build "${source_dir}" "${image}" "${variant}" "${dockerfile}"
+    ofbiz_docker_tool_build         "${source_dir}"         "${image}"         "${variant}"         "${dockerfile}"         "${java_major}"
     printf '%s\n' "${image}"
 }
 
