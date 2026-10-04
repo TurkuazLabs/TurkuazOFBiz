@@ -1,7 +1,7 @@
 # Dosya Yolu: /tools/portable/build-windows-portable.ps1
 # Amac: Apache OFBiz ve Temurin JDK iceren Windows x64 portable release paketlerini uretir
 # Tool - PowerShell
-# Version: 1.0.1
+# Version: 1.0.2
 # Aciklama: Apache release checksum dogrular, distZip olusturur, Demo/Runtime verisini preload eder ve portable ZIP/SHA-256 uretir
 #
 # Bagimli Oldugu Katman: Tool | Config | View
@@ -321,8 +321,10 @@ try {
     Push-Location $sourceRoot.FullName
     try {
         & (Join-Path $sourceRoot.FullName "gradle\init-gradle-wrapper.ps1")
-        if ($LASTEXITCODE -ne 0) {
-            Fail "Gradle wrapper hazirlanamadi."
+
+        $wrapperJar = Join-Path $sourceRoot.FullName "gradle\wrapper\gradle-wrapper.jar"
+        if (-not (Test-Path $wrapperJar)) {
+            Fail "Gradle wrapper hazirlanamadi: gradle-wrapper.jar bulunamadi."
         }
 
         Write-Step "Apache OFBiz distZip derleniyor"
