@@ -20,6 +20,8 @@ Surumleme Semantic Versioning mantigini izler.
 - 17.12.x local Docker build'inin yanlislikla varsayilan Java 17 kullanmasi engellendi.
 - Compat Docker build yolu 17.12=Java 8, 18.12=Java 8 ve 24.09/snapshot=Java 17 olarak statik CI testleriyle sabitlendi.
 - CI artik 17.12.09 icin gercek Dockerfile.compat runtime image build eder ve image icindeki Java 8 surumunu dogrular.
+- Legacy Gradle wrapper icindeki shasum cagrisi, Apache 18.12 Dockerfile'indaki yaklasimla uyumlu olarak sha1sum'a normalize edilir.
+- Docker build hata cleanup'i local work_dir scope disina cikan EXIT trap yerine function-scoped subshell cleanup ile guvenli hale getirildi.
 
 ### Verified
 

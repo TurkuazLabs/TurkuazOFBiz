@@ -1,7 +1,7 @@
 # Dosya Yolu: /services/docker-service.sh
 # Amac: OFBiz release ve snapshot Docker image/container is kurallarini yonetir
 # Service - Shell
-# Version: 1.1.0
+# Version: 1.1.1
 # Aciklama: Resmi image pull, kaynak koddan build, container run ve smoke test akislarini koordine eder
 #
 # Bagimli Oldugu Katman: Service | Repo | Tool | Config
@@ -147,27 +147,36 @@ ofbiz_docker_service_build() {
     identifier="$(ofbiz_docker_service_resolve "${type}" "${requested}" "${variant}")"
     image="${OFBIZ_IMAGE:-$(ofbiz_docker_repository_local_image "${type}" "${identifier}" "${variant}")}"
     work_dir="$(mktemp -d)"
-    trap 'rm -rf "${work_dir}"' EXIT
 
-    case "${type}" in
-        release)
-            source_dir="$(ofbiz_docker_service_prepare_release_source "${identifier}" "${work_dir}")"
-            ;;
-        snapshot)
-            source_dir="$(ofbiz_docker_service_prepare_snapshot_source "${identifier}" "${work_dir}")"
-            ;;
-    esac
+    (
+        trap 'rm -rf -- "${work_dir}"' EXIT
 
-    [[ -d "${source_dir}" ]] || ofbiz_docker_service_fail "Docker source directory not found."
+        case "${type}" in
+            release)
+                source_dir="$(ofbiz_docker_service_prepare_release_source "${identifier}" "${work_dir}")"
+                ;;
+            snapshot)
+                source_dir="$(ofbiz_docker_service_prepare_snapshot_source "${identifier}" "${work_dir}")"
+                ;;
+        esac
 
-    dockerfile="${source_dir}/Dockerfile"
+        [[ -d "${source_dir}" ]] || ofbiz_docker_service_fail "Docker source directory not found."
 
-    if [[ ! -f "${dockerfile}" ]]; then
-        dockerfile="${DOCKER_SERVICE_ROOT}/tools/docker/Dockerfile.compat"
-        java_major="$(ofbiz_docker_service_required_java "${type}" "${identifier}")"
-    fi
+        dockerfile="${source_dir}/Dockerfile"
 
-    ofbiz_docker_tool_build         "${source_dir}"         "${image}"         "${variant}"         "${dockerfile}"         "${java_major}"
+        if [[ ! -f "${dockerfile}" ]]; then
+            dockerfile="${DOCKER_SERVICE_ROOT}/tools/docker/Dockerfile.compat"
+            java_major="$(ofbiz_docker_service_required_java "${type}" "${identifier}")"
+        fi
+
+        ofbiz_docker_tool_build \
+            "${source_dir}" \
+            "${image}" \
+            "${variant}" \
+            "${dockerfile}" \
+            "${java_major}"
+    )
+
     printf '%s\n' "${image}"
 }
 

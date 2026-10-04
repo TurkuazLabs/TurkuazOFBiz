@@ -1,8 +1,8 @@
 # Dosya Yolu: /tools/docker/Dockerfile.compat
 # Amac: Resmi Dockerfile bulunmayan eski OFBiz release paketleri icin runtime ve demo image'lari olusturur
 # Config - Dockerfile
-# Version: 2.0.0
-# Aciklama: Java major surumune gore legacy kaynaklari runtime/demo stage'leri ile container image'e cevirir
+# Version: 2.0.1
+# Aciklama: Legacy wrapper checksum uyumlulugu ve Java major build arg ile runtime/demo image'lari olusturur
 #
 # Bagimli Oldugu Katman: Config | Tool
 
@@ -14,7 +14,11 @@ WORKDIR /ofbiz
 
 COPY . /ofbiz
 
-RUN chmod +x gradlew     && if [ -f gradle/init-gradle-wrapper.sh ]; then bash gradle/init-gradle-wrapper.sh; fi
+RUN chmod +x gradlew \
+    && if [ -f gradle/init-gradle-wrapper.sh ]; then \
+        sed -i 's/shasum/sha1sum/g' gradle/init-gradle-wrapper.sh; \
+        bash gradle/init-gradle-wrapper.sh; \
+    fi
 
 EXPOSE 8443 8009 5005
 

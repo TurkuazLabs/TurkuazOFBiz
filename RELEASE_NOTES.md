@@ -16,6 +16,8 @@ Bu patch surumu eski OFBiz release'lerinin local Docker build yolundaki Java maj
 
 v1.2.1 ile:
 
+- Legacy Gradle wrapper'in bekledigi shasum komutu sha1sum'a normalize edilir.
+- Docker build gecici dizin cleanup'i hata durumunda da guvenli calisir.
 - Compat Docker build Java major degerini version resolver'dan alir.
 - 17.12.x -> Java 8
 - 18.12.x -> Java 8
