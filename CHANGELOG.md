@@ -1,7 +1,7 @@
 # Dosya Yolu: /CHANGELOG.md
 # Amac: TurkuazOFBiz surumlerindeki kullaniciya donuk degisiklikleri kaydeder
 # View - Markdown
-# Version: 1.4.2
+# Version: 1.4.3
 # Aciklama: Semantic versioning tabanli proje degisiklik gecmisi
 #
 # Bagimli Oldugu Katman: View
@@ -11,6 +11,16 @@
 Tum dikkat cekici TurkuazOFBiz degisiklikleri bu dosyada kaydedilir.
 
 Surumleme Semantic Versioning mantigini izler.
+
+## [1.4.3] - 2026-10-04
+
+### Fixed
+
+- Windows ve Linux installer artik bos OFBiz root adresi yerine CI'da dogrulanan /partymgr endpoint'ini acar.
+- Installer container baslatildiktan sonra /partymgr HTTPS endpoint'i hazir olana kadar bekler.
+- Windows installer status/start/stop komutlarinda gereksiz 0 exit-code ciktisi kaldirildi.
+- Installer doctor action'i Docker-only kurulumda gereksiz unzip ve /opt/ofbiz kontrollerini calistirmak yerine doctor docker kullanir.
+- Docker-only kullanimda /opt/ofbiz bulunmamasi artik installer doctor sonucunu basarisiz yapmaz.
 
 ## [1.4.2] - 2026-10-04
 

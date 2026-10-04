@@ -1,7 +1,7 @@
 # Dosya Yolu: /install.sh
 # Amac: Linux ve WSL kullanicisi icin TurkuazOFBiz Docker kurulumunu tek komutta yonetir
 # Tool - Shell
-# Version: 1.0.0
+# Version: 1.1.0
 # Aciklama: Stabil TurkuazOFBiz release'ini hazirlar, Docker'i dogrular, OFBiz 24.09.07 demo container'ini baslatir ve tarayiciyi acar
 #
 # Bagimli Oldugu Katman: Tool | Controller | Service | Config
@@ -18,6 +18,7 @@ ACTION="${1:-install}"
 OFBIZ_VERSION="${OFBIZ_VERSION:-24.09.07}"
 OFBIZ_VARIANT="${OFBIZ_VARIANT:-demo}"
 OFBIZ_HTTPS_PORT="${OFBIZ_HTTPS_PORT:-8443}"
+OFBIZ_APP_PATH="${OFBIZ_APP_PATH:-/partymgr}"
 
 log() {
     printf '\n[TurkuazOFBiz] %s\n' "$*"
@@ -150,8 +151,35 @@ container_name() {
     printf 'ofbiz-release-%s\n' "${OFBIZ_VERSION//./-}"
 }
 
+ofbiz_url() {
+    printf 'https://localhost:%s%s\n' "${OFBIZ_HTTPS_PORT}" "${OFBIZ_APP_PATH}"
+}
+
+wait_ofbiz_ready() {
+    local url
+    local http_code
+    local attempt
+
+    url="$(ofbiz_url)"
+
+    for attempt in $(seq 1 72); do
+        http_code="$(curl             --insecure             --silent             --output /dev/null             --write-out '%{http_code}'             "${url}" 2>/dev/null || true)"
+
+        if [[ "${http_code}" =~ ^[23][0-9][0-9]$ ]]; then
+            printf '[TurkuazOFBiz] OFBiz hazir: HTTP %s\n' "${http_code}"
+            return
+        fi
+
+        sleep 5
+    done
+
+    fail "OFBiz HTTPS hazirlik zaman asimina ugradi: ${url}"
+}
+
 open_browser() {
-    local url="https://localhost:${OFBIZ_HTTPS_PORT}/"
+    local url
+
+    url="$(ofbiz_url)"
 
     if command -v powershell.exe >/dev/null 2>&1; then
         powershell.exe -NoProfile -Command "Start-Process '${url}'" >/dev/null 2>&1 || true
@@ -191,10 +219,12 @@ install_ofbiz() {
                 "${OFBIZ_VARIANT}"
     )
 
+    wait_ofbiz_ready
+
     printf '\n============================================================\n'
     printf ' TurkuazOFBiz hazir\n'
     printf '============================================================\n'
-    printf ' Adres       : https://localhost:%s/\n' "${OFBIZ_HTTPS_PORT}"
+    printf ' Adres       : %s\n' "$(ofbiz_url)"
     printf ' Kullanici   : admin\n'
     printf ' Parola      : %s\n' "${password}"
     printf ' Parola dosya: %s\n\n' "${SECRET_FILE}"
@@ -210,6 +240,7 @@ start_ofbiz() {
 
     if docker inspect "${container}" >/dev/null 2>&1; then
         docker start "${container}" >/dev/null
+        wait_ofbiz_ready
         open_browser
     else
         install_ofbiz
@@ -244,7 +275,7 @@ doctor_ofbiz() {
 
     (
         cd "${repo_root}"
-        bash controllers/ofbiz.sh doctor all
+        bash controllers/ofbiz.sh doctor docker
     )
 }
 
