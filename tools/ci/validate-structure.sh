@@ -1,7 +1,7 @@
 # Dosya Yolu: /tools/ci/validate-structure.sh
 # Amac: TurkuazOFBiz konfigurasyon yapisinin syntax, katman, resolver ve release metadata testlerini calistirir
 # Tool - Shell
-# Version: 1.4.0
+# Version: 1.5.0
 # Aciklama: CI icin ag gerektirmeyen syntax, katman, release/snapshot, Docker image ve proje surum testleri
 #
 # Bagimli Oldugu Katman: Tool | Controller | Service | Repo | View | Language | Config
@@ -152,6 +152,7 @@ validate_resolvers() {
 validate_controller_readonly_commands() {
     bash "${OFBIZ_ROOT_DIR}/controllers/ofbiz.sh" release list >/dev/null
     bash "${OFBIZ_ROOT_DIR}/controllers/ofbiz.sh" snapshot list >/dev/null
+    bash "${OFBIZ_ROOT_DIR}/controllers/ofbiz.sh" doctor local >/dev/null
     bash "${OFBIZ_ROOT_DIR}/controllers/ofbiz.sh" help >/dev/null
 }
 

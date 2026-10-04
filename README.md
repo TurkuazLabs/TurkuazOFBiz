@@ -1,7 +1,7 @@
 # Dosya Yolu: /README.md
 # Amac: TurkuazOFBiz projesinin ana giris, kurulum ve kullanim rehberini sunar
 # View - Markdown
-# Version: 3.1.1
+# Version: 3.2.0
 # Aciklama: Apache OFBiz release, snapshot, runtime ve Docker yonetim araclarini tanitir
 #
 # Bagimli Oldugu Katman: View | Controller | Service | Repo | Tool | Language | Config
@@ -11,7 +11,7 @@
 [![CI](https://github.com/TurkuazLabs/TurkuazOFBiz/actions/workflows/ofbiz-config-ci.yml/badge.svg)](https://github.com/TurkuazLabs/TurkuazOFBiz/actions/workflows/ofbiz-config-ci.yml)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 
-**Current version:** v1.0.1
+**Current version:** v1.1.0
 
 TurkuazOFBiz, Apache OFBiz release ve branch tabanli snapshot hedeflerini ayni arabirimden yonetmek icin gelistirilen acik kaynak yonetim aracidir.
 
@@ -26,6 +26,19 @@ cd TurkuazOFBiz
 bash tools/ci/validate-structure.sh
 bash controllers/ofbiz.sh help
 ~~~
+
+## Doctor
+
+Kurulum yapmadan yerel ortam ve uzak kaynaklari kontrol edin:
+
+~~~bash
+bash controllers/ofbiz.sh doctor all
+bash controllers/ofbiz.sh doctor release 24.09.07
+bash controllers/ofbiz.sh doctor snapshot 22.01
+bash controllers/ofbiz.sh doctor docker
+~~~
+
+Doctor PASS, WARN ve FAIL sonuclari verir. Kritik hata varsa non-zero exit code dondurur.
 
 ## Release
 
@@ -112,6 +125,8 @@ katman/header testleri
 release/snapshot resolver testleri
 Docker tag resolver testleri
 release metadata tutarliligi
+gercek 24.09.07 ZIP + SHA-512 dogrulamasi
+doctor ag/sistem smoke kontrolleri
 resmi GHCR manifest kontrolleri
 24.09.07 preloaddemo gercek HTTPS smoke testi
 release22.01 Dockerfile build check

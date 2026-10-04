@@ -1,8 +1,8 @@
 # Dosya Yolu: /views/help-view.sh
 # Amac: OFBiz CLI yardim metnini kullaniciya sunar
 # View - Shell
-# Version: 1.1.0
-# Aciklama: Release, snapshot, runtime ve Docker komutlarini gosterir
+# Version: 1.2.0
+# Aciklama: Release, snapshot, runtime, Docker ve doctor komutlarini gosterir
 #
 # Bagimli Oldugu Katman: View | Language
 
@@ -42,6 +42,13 @@ Docker:
   bash controllers/ofbiz.sh docker smoke <release|snapshot> <target> <runtime|demo>
   bash controllers/ofbiz.sh docker status <container-name>
   bash controllers/ofbiz.sh docker stop <container-name>
+
+Doctor:
+  bash controllers/ofbiz.sh doctor local
+  bash controllers/ofbiz.sh doctor release [latest|24.09|18.12|17.12|exact]
+  bash controllers/ofbiz.sh doctor snapshot [trunk|24.09|22.01]
+  bash controllers/ofbiz.sh doctor docker
+  bash controllers/ofbiz.sh doctor all [release]
 
 Examples:
   bash controllers/ofbiz.sh docker pull release 24.09.07 runtime

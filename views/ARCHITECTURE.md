@@ -1,7 +1,7 @@
 # Dosya Yolu: /views/ARCHITECTURE.md
 # Amac: OFBiz konfigurasyon araclarinin katmanli mimarisini ve sorumluluk sinirlarini dokumante eder
 # View - Markdown
-# Version: 1.2.0
+# Version: 1.3.0
 # Aciklama: Release, snapshot, runtime ve Docker akislarinin katman bagimliliklarini aciklar
 #
 # Bagimli Oldugu Katman: View | Controller | Service | Repo | Tool | Language | Config
@@ -17,6 +17,7 @@ controllers/ofbiz.sh
     +--> services/snapshot-service.sh
     +--> services/runtime-service.sh
     +--> services/docker-service.sh
+    +--> services/doctor-service.sh
               |
               +--> repositories/install-repository.sh
               +--> repositories/docker-repository.sh
@@ -25,6 +26,7 @@ controllers/ofbiz.sh
               +--> tools/release-tool.sh
               +--> tools/git-tool.sh
               +--> tools/docker-tool.sh
+              +--> tools/doctor-tool.sh
               +--> tools/ofbiz-run.sh
 
 views/
@@ -39,6 +41,8 @@ Service is kurallarini ve akislari koordine eder.
 Repository kurulum storage'i, metadata, image referansi ve container adlandirma bilgisini yonetir.
 
 Tool Git, Curl, Java, Gradle ve Docker CLI gibi dis sistem adaptorlerini kapsar.
+
+Doctor Service kurulum yapmadan local komutlari, release kaynaklarini, Adoptium endpoint'ini, snapshot branch'lerini ve Docker durumunu Tool/Repository katmanlari uzerinden kontrol eder.
 
 Config release/snapshot kataloglari, dis kaynaklar, Docker tag'leri ve runtime sabitlerini tutar.
 

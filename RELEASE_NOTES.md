@@ -1,38 +1,55 @@
 # Dosya Yolu: /RELEASE_NOTES.md
-# Amac: TurkuazOFBiz v1.0.1 GitHub release notlarini hazirlar
+# Amac: TurkuazOFBiz v1.1.0 GitHub release notlarini hazirlar
 # View - Markdown
-# Version: 1.0.1
-# Aciklama: Apache release checksum uyumluluk duzeltmesini ozetler
+# Version: 1.1.0
+# Aciklama: Doctor teshis komutu ve gelistirilmis release checksum testlerini ozetler
 #
 # Bagimli Oldugu Katman: View
 
-# TurkuazOFBiz v1.0.1
+# TurkuazOFBiz v1.1.0
 
-Bu patch surumu sabit Apache OFBiz release ZIP kurulumundaki SHA-512 dogrulama hatasini duzeltir.
+v1.1.0 sistem ve uzak kaynak sorunlarini kurulumdan once tespit etmek icin yeni doctor komutunu ekler.
 
-## Fixed
+## Doctor
 
-Apache OFBiz resmi .sha512 dosyalari GNU sha512sum kontrol formatindan farkli olarak Apache filename-colon-hash formatini kullanir. v1.0.0 release downloader bu dosyayi dogrudan sha512sum --check ile okumaya calistigi icin release ZIP kurulumu hata verebiliyordu.
+Tum temel kontroller:
 
-v1.0.1 ile:
+~~~bash
+bash controllers/ofbiz.sh doctor all
+~~~
 
-- Apache filename-colon-hash checksum formati desteklenir.
-- GNU hash-filename checksum formati da desteklenmeye devam eder.
-- Gercek archive hash'i hesaplanip normalize edilmis beklenen SHA-512 ile karsilastirilir.
-- Hata durumunda gecici download dizini temizlenir.
+Yalnizca yerel ortam:
+
+~~~bash
+bash controllers/ofbiz.sh doctor local
+~~~
+
+Belirli release:
+
+~~~bash
+bash controllers/ofbiz.sh doctor release 24.09.07
+bash controllers/ofbiz.sh doctor release 18.12
+~~~
+
+Snapshot branch:
+
+~~~bash
+bash controllers/ofbiz.sh doctor snapshot trunk
+bash controllers/ofbiz.sh doctor snapshot 22.01
+~~~
+
+Docker:
+
+~~~bash
+bash controllers/ofbiz.sh doctor docker
+~~~
+
+Doctor kurulum yapmaz ve dosya sistemi durumunu degistirmez. PASS, WARN ve FAIL sonuclari verir; kritik failure varsa non-zero exit code dondurur.
+
+## Release integrity
+
+CI artik sadece parser fixture'ini degil gercek Apache 24.09.07 release ZIP ve .sha512 dosyasini indirerek uctan uca dogrulama yapar.
 
 ## Compatibility
 
-Komutlarda veya klasor yapisinda kirici degisiklik yoktur.
-
-~~~bash
-sudo bash controllers/ofbiz.sh release install 24.09.07
-sudo bash controllers/ofbiz.sh release install 18.12.19
-~~~
-
-## Validation
-
-- Apache 24.09.07 resmi SHA-512 formati parser fixture'i ile dogrulandi.
-- Bash syntax ve ShellCheck kontrolleri korunur.
-- Gercek 24.09.07 Docker HTTPS smoke testi korunur.
-- release22.01 Dockerfile build check korunur.
+Mevcut release, snapshot, runtime ve Docker komutlari degismemistir.

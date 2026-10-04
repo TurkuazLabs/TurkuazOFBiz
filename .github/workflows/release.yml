@@ -1,7 +1,7 @@
 # Dosya Yolu: /.github/workflows/release.yml
 # Amac: Basarili main CI sonrasinda VERSION degerinden GitHub tag ve release olusturur
 # Tool - YAML
-# Version: 1.0.0
+# Version: 1.1.0
 # Aciklama: Ayni surum release edilmemisse RELEASE_NOTES.md ile otomatik stabil GitHub Release yayinlar
 #
 # Bagimli Oldugu Katman: Tool | View | Config
@@ -34,7 +34,26 @@ jobs:
           ref: ${{ github.event.workflow_run.head_sha }}
           fetch-depth: 0
 
+      - name: Verify validated commit is current main
+        id: current
+        shell: bash
+        env:
+          VALIDATED_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+
+          git fetch origin main
+          CURRENT_MAIN_SHA="$(git rev-parse origin/main)"
+
+          if [[ "${VALIDATED_SHA}" != "${CURRENT_MAIN_SHA}" ]]; then
+            echo "Validated commit is no longer current main; skipping release."
+            echo "skip=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "skip=false" >> "${GITHUB_OUTPUT}"
+          fi
+
       - name: Resolve release metadata
+        if: steps.current.outputs.skip != 'true'
         id: meta
         shell: bash
         env:
@@ -61,7 +80,7 @@ jobs:
           echo "tag=${TAG}" >> "${GITHUB_OUTPUT}"
 
       - name: Publish GitHub Release
-        if: steps.meta.outputs.skip != 'true'
+        if: steps.current.outputs.skip != 'true' && steps.meta.outputs.skip != 'true'
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}

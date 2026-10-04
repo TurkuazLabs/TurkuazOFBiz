@@ -1,7 +1,7 @@
 # Dosya Yolu: /CHANGELOG.md
 # Amac: TurkuazOFBiz surumlerindeki kullaniciya donuk degisiklikleri kaydeder
 # View - Markdown
-# Version: 1.0.1
+# Version: 1.1.0
 # Aciklama: Semantic versioning tabanli proje degisiklik gecmisi
 #
 # Bagimli Oldugu Katman: View
@@ -11,6 +11,27 @@
 Tum dikkat cekici TurkuazOFBiz degisiklikleri bu dosyada kaydedilir.
 
 Surumleme Semantic Versioning mantigini izler.
+
+## [1.1.0] - 2026-10-04
+
+### Added
+
+- Yan etkisiz sistem teshisi icin doctor komutu.
+- doctor local ile gerekli komutlar, install root ve aktif target kontrolu.
+- doctor release ile release ZIP, SHA-512 ve Adoptium JDK endpoint kontrolu.
+- doctor snapshot ile Apache Git branch ve Java mapping kontrolu.
+- doctor docker ile Docker CLI, daemon ve resmi image manifest kontrolu.
+- doctor all ile tum kontrollerin tek komutta calistirilmasi.
+- CI icinde gercek Apache 24.09.07 ZIP + SHA-512 indirme/dogrulama smoke testi.
+
+### Changed
+
+- Release checksum CI testi fixture seviyesinden gercek Apache dosyasi ile uctan uca dogrulamaya genisletildi.
+
+### Verified
+
+- Apache 24.09.07 release ZIP ve resmi SHA-512 dosyasi CI'da gercekten indirildi ve dogrulandi.
+- Doctor komutu GitHub Actions Linux/Docker ortaminda ag kaynaklariyla test edilir.
 
 ## [1.0.1] - 2026-10-04
 

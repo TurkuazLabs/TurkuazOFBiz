@@ -1,8 +1,8 @@
 # Dosya Yolu: /controllers/ofbiz.sh
 # Amac: OFBiz komut satiri isteklerini alip ilgili Service katmanina yonlendirir
 # Controller - Shell
-# Version: 4.2.0
-# Aciklama: Release, snapshot, runtime ve Docker komutlari icin ince routing controller'i
+# Version: 4.3.0
+# Aciklama: Release, snapshot, runtime, Docker ve doctor komutlari icin ince routing controller'i
 #
 # Bagimli Oldugu Katman: Controller | Service | View
 
@@ -19,6 +19,8 @@ source "${OFBIZ_ROOT_DIR}/services/snapshot-service.sh"
 source "${OFBIZ_ROOT_DIR}/services/runtime-service.sh"
 # shellcheck source=/dev/null
 source "${OFBIZ_ROOT_DIR}/services/docker-service.sh"
+# shellcheck source=/dev/null
+source "${OFBIZ_ROOT_DIR}/services/doctor-service.sh"
 # shellcheck source=/dev/null
 source "${OFBIZ_ROOT_DIR}/views/help-view.sh"
 
@@ -117,6 +119,9 @@ ofbiz_controller_main() {
             ;;
         docker)
             ofbiz_controller_docker "${2:-help}" "${3:-release}" "${4:-latest}" "${5:-runtime}"
+            ;;
+        doctor)
+            ofbiz_doctor_service_run "${2:-all}" "${3:-}"
             ;;
         current)
             ofbiz_runtime_service_current
