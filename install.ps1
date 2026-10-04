@@ -139,7 +139,64 @@ function Convert-ToWslPath {
 
     $fullPath = [System.IO.Path]::GetFullPath($WindowsPath)
 
-    if ($fullPath -match '^([A-Za-z]):\\(.*)
+    if ($fullPath -match '^([A-Za-z]):\\(.*)$') {
+        $drive = $Matches[1].ToLowerInvariant()
+        $tail = $Matches[2] -replace '\\', '/'
+        $candidate = "/mnt/$drive/$tail"
+
+        & wsl.exe -d $LinuxDistro -- test -d $candidate 2>$null
+        if ($LASTEXITCODE -eq 0) {
+            return $candidate
+        }
+    }
+
+    $previousWindowsPath = $env:TURKUAZOFBIZ_WINDOWS_PATH
+    $previousWslEnv = $env:WSLENV
+
+    try {
+        $env:TURKUAZOFBIZ_WINDOWS_PATH = $fullPath
+
+        $otherEntries = @()
+        if ($previousWslEnv) {
+            $otherEntries = @(
+                $previousWslEnv -split ':' |
+                    Where-Object {
+                        $_ -and
+                        $_ -notmatch '^TURKUAZOFBIZ_WINDOWS_PATH(?:/.*)?$'
+                    }
+            )
+        }
+
+        $env:WSLENV = (@("TURKUAZOFBIZ_WINDOWS_PATH/p") + $otherEntries) -join ':'
+
+        $result = & wsl.exe -d $LinuxDistro -- printenv TURKUAZOFBIZ_WINDOWS_PATH 2>$null
+        if ($LASTEXITCODE -eq 0 -and $result) {
+            $candidate = ([string]$result).Trim()
+
+            & wsl.exe -d $LinuxDistro -- test -d $candidate 2>$null
+            if ($LASTEXITCODE -eq 0) {
+                return $candidate
+            }
+        }
+    }
+    finally {
+        if ($null -eq $previousWindowsPath) {
+            Remove-Item Env:\TURKUAZOFBIZ_WINDOWS_PATH -ErrorAction SilentlyContinue
+        }
+        else {
+            $env:TURKUAZOFBIZ_WINDOWS_PATH = $previousWindowsPath
+        }
+
+        if ($null -eq $previousWslEnv) {
+            Remove-Item Env:\WSLENV -ErrorAction SilentlyContinue
+        }
+        else {
+            $env:WSLENV = $previousWslEnv
+        }
+    }
+
+    Fail "Windows yolu WSL icinde bulunamadi: $fullPath"
+}
 
 function Invoke-WslBash {
     param(
