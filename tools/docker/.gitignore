@@ -1,0 +1,10 @@
+# Dosya Yolu: /tools/docker/.gitignore
+# Amac: Docker local secret ve ortam dosyalarinin Git'e eklenmesini engeller
+# Config - GitIgnore
+# Version: 1.0.0
+# Aciklama: Gercek .env dosyasini ignore eder, .env.example dosyasini repoda tutar
+#
+# Bagimli Oldugu Katman: Config
+
+.env
+!.env.example

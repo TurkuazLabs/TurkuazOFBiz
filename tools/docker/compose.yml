@@ -1,0 +1,31 @@
+# Dosya Yolu: /tools/docker/compose.yml
+# Amac: Secilen OFBiz Docker image'ini guvenli local port bind ve kalici volume'lerle calistirir
+# Tool - YAML
+# Version: 2.0.0
+# Aciklama: Resmi OFBiz entrypoint ortam degiskenleri ve kalici runtime/config/lib-extra volume'lerini tanimlar
+#
+# Bagimli Oldugu Katman: Tool | Config
+
+services:
+  ofbiz:
+    image: "${OFBIZ_IMAGE}"
+    container_name: "${OFBIZ_CONTAINER_NAME}"
+    restart: unless-stopped
+    environment:
+      OFBIZ_DATA_LOAD: "${OFBIZ_DATA_LOAD}"
+      OFBIZ_ADMIN_USER: "${OFBIZ_ADMIN_USER}"
+      OFBIZ_ADMIN_PASSWORD: "${OFBIZ_ADMIN_PASSWORD}"
+      OFBIZ_HOST: "${OFBIZ_HOST}"
+    ports:
+      - "${OFBIZ_HTTPS_BIND}:${OFBIZ_HTTPS_PORT}:8443"
+    volumes:
+      - ofbiz_runtime:/ofbiz/runtime
+      - ofbiz_config:/ofbiz/config
+      - ofbiz_lib_extra:/ofbiz/lib-extra
+      - ofbiz_hooks:/docker-entrypoint-hooks
+
+volumes:
+  ofbiz_runtime:
+  ofbiz_config:
+  ofbiz_lib_extra:
+  ofbiz_hooks:

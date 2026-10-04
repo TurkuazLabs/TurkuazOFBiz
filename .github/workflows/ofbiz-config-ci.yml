@@ -1,0 +1,94 @@
+# Dosya Yolu: /.github/workflows/ofbiz-config-ci.yml
+# Amac: TurkuazOFBiz araclarinin statik ve gercek Docker smoke dogrulamasini calistirir
+# Tool - YAML
+# Version: 2.0.0
+# Aciklama: Syntax, ShellCheck, resolver ve resmi 24.09.07 demo container smoke testlerini kosar
+#
+# Bagimli Oldugu Katman: Tool | Controller | Service | Repo | Config
+
+name: TurkuazOFBiz CI
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "config/**"
+      - "controllers/**"
+      - "language/**"
+      - "repositories/**"
+      - "services/**"
+      - "tools/**"
+      - ".github/workflows/ofbiz-config-ci.yml"
+  pull_request:
+    paths:
+      - "config/**"
+      - "controllers/**"
+      - "language/**"
+      - "repositories/**"
+      - "services/**"
+      - "tools/**"
+      - ".github/workflows/ofbiz-config-ci.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate TurkuazOFBiz
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate structure and syntax
+        shell: bash
+        run: bash tools/ci/validate-structure.sh
+
+      - name: ShellCheck active scripts
+        shell: bash
+        run: |
+          find controllers services repositories tools \
+            -type f -name '*.sh' \
+            -not -path '*/legacy/*' \
+            -print0 \
+            | xargs -0 shellcheck -s bash -S error -e SC1090,SC1091
+
+  docker-smoke:
+    name: Docker smoke 24.09.07
+    needs: validate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify official Docker tags
+        shell: bash
+        run: |
+          docker manifest inspect ghcr.io/apache/ofbiz:24.09.07 >/dev/null
+          docker manifest inspect ghcr.io/apache/ofbiz:24.09.07-preloaddemo >/dev/null
+          docker manifest inspect ghcr.io/apache/ofbiz:trunk-snapshot >/dev/null
+          docker manifest inspect ghcr.io/apache/ofbiz:release24.09-snapshot >/dev/null
+
+      - name: Pull preloaded demo image
+        shell: bash
+        run: docker pull ghcr.io/apache/ofbiz:24.09.07-preloaddemo
+
+      - name: Run real OFBiz smoke test
+        shell: bash
+        run: |
+          set -euo pipefail
+          trap 'docker rm -f ofbiz-smoke >/dev/null 2>&1 || true' EXIT
+          bash controllers/ofbiz.sh docker smoke release 24.09.07 demo
+
+      - name: Validate 22.01 branch Dockerfile
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --single-branch --branch release22.01 \
+            https://github.com/apache/ofbiz-framework.git \
+            "$RUNNER_TEMP/ofbiz-22.01"
+          docker build --check "$RUNNER_TEMP/ofbiz-22.01"
