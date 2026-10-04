@@ -15,9 +15,8 @@ if [[ -z "$website" ]]; then
 fi
 
 cd /tmp
-wget https://raw.githubusercontent.com/b1glord/Configs/master/OFB%C4%B0Z/tools/legacy/java/oraclejdk8.sh
-chmod +x oraclejdk8.sh
-./oraclejdk8.sh
+wget -O oraclejdk8.sh https://raw.githubusercontent.com/TurkuazLabs/TurkuazOFBiz/main/tools/legacy/java/oraclejdk8.sh
+bash oraclejdk8.sh
 
 yum -y install perl-Digest-SHA
 
