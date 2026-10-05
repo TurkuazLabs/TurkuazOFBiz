@@ -2,13 +2,30 @@
 # Amac: TurkuazOFBiz v1.7.0 GitHub release notlarini hazirlar
 # View - Markdown
 # Version: 1.7.0
-# Aciklama: Config tabanli cok-surumlu Windows portable dagitim modelini tanitir
+# Aciklama: Cok-surumlu portable dagitim ve tek Windows/Linux Native-Docker installer modelini tanitir
 #
 # Bagimli Oldugu Katman: View | Tool | Config
 
 # TurkuazOFBiz v1.7.0
 
-v1.7.0 ile Windows portable dagitim tek bir OFBiz surumune bagli olmaktan cikarildi.
+v1.7.0 ile Windows portable dagitim tek bir OFBiz surumune bagli olmaktan cikarildi ve Windows/Linux kurulumlari ortak Native/Docker secim modeline toplandi.
+
+## Tek installer modeli
+
+Kurulum akisi iki platformda ayni kavramlari kullanir:
+
+~~~text
+Mode         -> Native / Docker
+Target type  -> Release / desteklenen Snapshot
+Target       -> OFBiz surumu veya branch
+Variant      -> Demo / Runtime
+~~~
+
+Windows'ta Native varsayilan moddur. Installer uygun portable release asset'ini indirir, SHA-256 dogrular ve WSL/Docker kullanmadan calistirir.
+
+Linux'ta Native varsayilan moddur. Installer mevcut Controller -> Service -> Repo -> Tool katmanini kullanarak OFBiz runtime'ini ve gerekli Temurin JDK'yi kurar. Docker modu opsiyonel alternatif olarak korunur.
+
+Windows Docker modu WSL2 + Docker Desktop kullanir. Linux Docker modu yerel Docker daemon kullanir.
 
 ## Portable hedefler
 
@@ -83,4 +100,4 @@ GitHub Release yayinlanmadan once her portable hedef:
 
 gecer.
 
-Docker/WSL installer alternatif calisma modu olarak korunur.
+Docker kurulum modu alternatif calisma modu olarak korunur. Windows Native icin WSL/Docker zorunlu degildir; Linux Native icin Docker daemon zorunlu degildir.
