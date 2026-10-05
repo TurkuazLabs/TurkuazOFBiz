@@ -1,7 +1,7 @@
 # Dosya Yolu: /install.ps1
 # Amac: Windows kullanicisi icin Native portable veya Docker TurkuazOFBiz kurulumunu tek arabirimden yonetir
 # Controller - PowerShell
-# Version: 2.2.0
+# Version: 2.3.0
 # Aciklama: Ortak mode/target/version/variant modeliyle Windows native portable ve WSL/Docker kurulumlarini yonlendirir
 #
 # Bagimli Oldugu Katman: Controller | Service | Repo | Tool | View | Config
@@ -38,6 +38,8 @@ $DesktopShortcut = Join-Path ([Environment]::GetFolderPath("Desktop")) "TurkuazO
 $DefaultAppPath = ""
 $InstallerDefaultMode = ""
 $InstallerDefaultHttpsPort = 0
+$DockerLegacyReleasePrefix = ""
+$DockerLegacyRequiredVariant = ""
 
 function Write-Step {
     param([string]$Message)
@@ -97,14 +99,20 @@ function Get-ConfigValue {
 
 function Initialize-InstallerConfig {
     $installerConfig = Join-Path $ManagedRepo "config\installer.conf"
+    $dockerConfig = Join-Path $ManagedRepo "config\docker.conf"
 
     if (-not (Test-Path $installerConfig)) {
         Fail "Installer config bulunamadi: $installerConfig"
+    }
+    if (-not (Test-Path $dockerConfig)) {
+        Fail "Docker config bulunamadi: $dockerConfig"
     }
 
     $script:InstallerDefaultMode = Get-ConfigValue -ConfigPath $installerConfig -VariableName "OFBIZ_INSTALL_MODE_DEFAULT"
     $script:InstallerDefaultHttpsPort = [int](Get-ConfigValue -ConfigPath $installerConfig -VariableName "OFBIZ_INSTALL_HTTPS_PORT_DEFAULT")
     $script:DefaultAppPath = Get-ConfigValue -ConfigPath $installerConfig -VariableName "OFBIZ_INSTALL_APP_PATH_DEFAULT"
+    $script:DockerLegacyReleasePrefix = Get-ConfigValue -ConfigPath $dockerConfig -VariableName "OFBIZ_DOCKER_LEGACY_RELEASE_PREFIX"
+    $script:DockerLegacyRequiredVariant = Get-ConfigValue -ConfigPath $dockerConfig -VariableName "OFBIZ_DOCKER_LEGACY_REQUIRED_VARIANT"
 }
 
 function Get-ConfigMultilineValues {
@@ -247,10 +255,10 @@ function Select-DockerTarget {
         }
     }
 
-    if ($TargetType -eq "release" -and $OFBizVersion -like "17.12.*") {
-        $script:Variant = "demo"
+    if ($TargetType -eq "release" -and $OFBizVersion.StartsWith($DockerLegacyReleasePrefix)) {
+        $script:Variant = $DockerLegacyRequiredVariant
         Write-Host ""
-        Write-Host "17.12 Docker compat yolu demo varyantini kullanir." -ForegroundColor Yellow
+        Write-Host "Legacy Docker hedefi $DockerLegacyRequiredVariant varyantini kullanir." -ForegroundColor Yellow
     }
     else {
         Select-Variant
