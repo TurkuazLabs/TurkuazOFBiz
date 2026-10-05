@@ -30,6 +30,12 @@ Surumleme Semantic Versioning mantigini izler.
 - Release workflow sabit 24.09.07 hedefi yerine merkezi portable matrisi kullanir.
 - GitHub Release tum portable hedeflerin Demo/Runtime ZIP ve SHA-256 dosyalarini otomatik toplar.
 
+### Fixed
+
+- Windows CRLF satir sonlarinin portable metadata smoke testini yanlis negatif sonuclandirmasi giderildi.
+- Eski basarili CI kosularinin current main degilken pahali Windows portable build baslatmasi engellendi.
+- Ayni validated commit icin yinelenen release workflow kosulari concurrency grubu ile tekillestirildi.
+
 ### Verified
 
 - Portable helper `javac --release 8` ile CI'da derlenir.
