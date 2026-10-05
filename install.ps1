@@ -1,7 +1,7 @@
 # Dosya Yolu: /install.ps1
 # Amac: Windows kullanicisi icin Native portable veya Docker TurkuazOFBiz kurulumunu tek arabirimden yonetir
 # Controller - PowerShell
-# Version: 2.3.0
+# Version: 2.3.1
 # Aciklama: Ortak mode/target/version/variant modeliyle Windows native portable ve WSL/Docker kurulumlarini yonlendirir
 #
 # Bagimli Oldugu Katman: Controller | Service | Repo | Tool | View | Config
@@ -714,7 +714,21 @@ function Wait-OFBizReady {
         $httpCode = (& curl.exe --insecure --silent --output NUL --write-out "%{http_code}" $url 2>$null)
         $httpCode = ([string]$httpCode).Trim()
 
-        if ($httpCode -match '^[23][0-9][0-9]
+        if ($httpCode -match '^[23][0-9][0-9]$') {
+            Write-Host "[TurkuazOFBiz] OFBiz hazir: HTTP $httpCode"
+            return
+        }
+
+        Start-Sleep -Seconds 5
+    }
+
+    Fail "OFBiz HTTPS hazirlik zaman asimina ugradi: $url"
+}
+
+function Open-OFBiz {
+    Start-Process (Get-OFBizUrl) | Out-Null
+}
+
 function Prepare-TargetImage {
     param(
         [string]$LinuxDistro,
