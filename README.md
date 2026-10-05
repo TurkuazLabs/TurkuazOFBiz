@@ -1,8 +1,8 @@
 # Dosya Yolu: /README.md
 # Amac: TurkuazOFBiz projesinin ana giris, kurulum ve kullanim rehberini sunar
 # View - Markdown
-# Version: 3.13.0
-# Aciklama: Apache OFBiz release, snapshot, runtime ve Docker yonetim araclarini tanitir
+# Version: 3.14.0
+# Aciklama: Tek Windows/Linux installer, native portable/runtime ve opsiyonel Docker kurulum modelini tanitir
 #
 # Bagimli Oldugu Katman: View | Controller | Service | Repo | Tool | Language | Config
 
@@ -17,9 +17,28 @@ TurkuazOFBiz, Apache OFBiz release ve branch tabanli snapshot hedeflerini ayni a
 
 Bu proje Apache OFBiz'in resmi dagitimi degildir. Apache OFBiz kaynaklarini, resmi release paketlerini ve resmi container image'larini kullanir.
 
-## Windows Portable - onerilen kullanim
+## Tek kurulum modeli
 
-TurkuazOFBiz'in ana Windows dagitim modeli portable pakettir. Docker, WSL, sistem Java kurulumu veya PowerShell script calistirma izni gerekmez.
+TurkuazOFBiz Windows ve Linux'ta ayni kurulum kararlarini kullanir:
+
+~~~text
+Kurulum modu -> Native veya Docker
+Hedef tipi   -> Release veya uygun platformda Snapshot
+OFBiz hedefi -> Surum / branch
+Varyant      -> Demo veya Runtime
+~~~
+
+**Native varsayilandir. Docker alternatif secenektir.**
+
+Windows Native modu release'teki portable ZIP paketini SHA-256 dogrulayarak kurar. WSL, Docker Desktop veya sistem Java kurulumu gerekmez.
+
+Linux Native modu mevcut Controller -> Service -> Repo -> Tool katmanini kullanarak OFBiz'i ve gerekli Temurin JDK'yi kurar. Docker daemon gerekmez.
+
+Docker modu Windows'ta WSL2 + Docker Desktop, Linux'ta yerel Docker daemon kullanir.
+
+## Windows Native Portable
+
+TurkuazOFBiz'in ana Windows native dagitim modeli portable pakettir. Docker, WSL ve sistem Java kurulumu gerekmez.
 
 v1.7.0 release matrisi desteklenen her ana release ailesinin guncel portable hedefi icin Demo ve Runtime paketi uretir:
 
@@ -66,16 +85,28 @@ TurkuazOFBiz-Portable-<ofbiz-version>-...\
 
 Her paket hedef OFBiz surumunun gerektirdigi Temurin JDK runtime'ini kendi icinde tasir. Apache OFBiz `distZip` dagitimi kullanilir; Demo/Runtime verisi release CI sirasinda Windows runner'da preload edilir. Portable calistirma Apache'nin uzun generated Windows classpath'i yerine `config;lib-extra\*;lib\*` wildcard classpath kullanan TurkuazOFBiz launcher'i ile yapilir; boylece Windows CMD satir uzunlugu sinirina takilmaz. Release yayinlanmadan once her iki paket de bundled Java ile gercek `https://localhost:8443/partymgr` smoke testinden gecirilir.
 
-### Docker / WSL - opsiyonel
+### Windows tek installer
 
-Docker tabanli installer korunur ancak artik alternatif calisma modudur. Son release altindaki `TurkuazOFBiz-Setup.zip` paketi WSL2 + Docker Desktop kullananlar icindir.
+Son release altindaki `TurkuazOFBiz-Setup.zip` tek Windows installer paketidir. Launcher acildiginda:
 
-Docker launcher internetten PowerShell kodu indirmez ve `ExecutionPolicy Bypass` kullanmaz; ancak sistem policy'si imzasiz PowerShell'i tamamen kapatiyorsa portable Windows paketi tercih edilmelidir.
+1. Native Portable veya Docker secilir.
+2. Native secilirse portable release katalogundan OFBiz surumu secilir.
+3. Docker secilirse release veya snapshot hedefi secilebilir.
+4. Demo/Runtime secilir.
 
-## Linux / WSL tek komut
+Docker launcher internetten PowerShell kodu indirmez ve `ExecutionPolicy Bypass` kullanmaz.
+
+## Linux / WSL tek installer
 
 ~~~bash
 curl -fsSL https://raw.githubusercontent.com/TurkuazLabs/TurkuazOFBiz/main/install.sh | bash
+~~~
+
+Interaktif calistirmada Native veya Docker secilir. Otomasyon icin ayni model environment degiskenleriyle verilebilir:
+
+~~~bash
+OFBIZ_INSTALL_MODE=native OFBIZ_VERSION=24.09.07 OFBIZ_VARIANT=demo bash install.sh
+OFBIZ_INSTALL_MODE=docker OFBIZ_VERSION=24.09.07 OFBIZ_VARIANT=demo bash install.sh
 ~~~
 
 ## Gelistirici hizli baslangic
