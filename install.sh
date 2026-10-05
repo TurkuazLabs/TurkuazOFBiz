@@ -1,7 +1,7 @@
 # Dosya Yolu: /install.sh
 # Amac: Linux ve WSL kullanicisi icin Native veya Docker TurkuazOFBiz kurulumunu tek arabirimden yonetir
 # Controller - Shell
-# Version: 2.1.1
+# Version: 2.2.0
 # Aciklama: Ortak mode/target/version/variant modeliyle native Linux ve Docker kurulum, start, stop, status, doctor ve open aksiyonlarini yonlendirir
 #
 # Bagimli Oldugu Katman: Controller | Service | Repo | Tool | View | Config
@@ -142,14 +142,18 @@ load_installer_config() {
     local repo_root="${1:?repo root required}"
     local installer_config="${repo_root}/config/installer.conf"
     local versions_config="${repo_root}/config/versions.conf"
+    local docker_config="${repo_root}/config/docker.conf"
 
     [[ -f "${installer_config}" ]] || fail "Installer config bulunamadi: ${installer_config}"
     [[ -f "${versions_config}" ]] || fail "Version config bulunamadi: ${versions_config}"
+    [[ -f "${docker_config}" ]] || fail "Docker config bulunamadi: ${docker_config}"
 
     # shellcheck source=/dev/null
     source "${installer_config}"
     # shellcheck source=/dev/null
     source "${versions_config}"
+    # shellcheck source=/dev/null
+    source "${docker_config}"
 }
 
 config_multiline_values() {
@@ -269,12 +273,17 @@ select_target() {
             ;;
     esac
 
-    printf '\nCalisma verisi:\n'
-    printf ' 1 - Demo    (hazir ornek veri; kullaniciya hazir)\n'
-    printf ' 2 - Runtime (seed/production bootstrap)\n'
+    if [[ "${INSTALL_MODE}" == "${OFBIZ_INSTALL_MODE_DOCKER}"         && "${TARGET_TYPE}" == "release"         && "${OFBIZ_VERSION}" == "${OFBIZ_DOCKER_LEGACY_RELEASE_PREFIX}"* ]]; then
+        OFBIZ_VARIANT="${OFBIZ_DOCKER_LEGACY_REQUIRED_VARIANT}"
+        printf '\nLegacy Docker hedefi zorunlu varyant kullaniyor: %s\n' "${OFBIZ_VARIANT}"
+    else
+        printf '\nCalisma verisi:\n'
+        printf ' 1 - Demo    (hazir ornek veri; kullaniciya hazir)\n'
+        printf ' 2 - Runtime (seed/production bootstrap)\n'
 
-    family="$(read_choice "Varyant" 1 2 1)"
-    OFBIZ_VARIANT="$([[ "${family}" == "1" ]] && printf demo || printf runtime)"
+        family="$(read_choice "Varyant" 1 2 1)"
+        OFBIZ_VARIANT="$([[ "${family}" == "1" ]] && printf demo || printf runtime)"
+    fi
 
     printf '\nSecilen: %s / %s / %s / %s\n'         "${INSTALL_MODE}" "${TARGET_TYPE}" "${OFBIZ_VERSION}" "${OFBIZ_VARIANT}"
 }
@@ -512,6 +521,10 @@ install_ofbiz() {
     select_install_mode
     select_target "${repo_root}"
     ensure_defaults
+
+    if [[ "${INSTALL_MODE}" == "${OFBIZ_INSTALL_MODE_DOCKER}"         && "${TARGET_TYPE}" == "release"         && "${OFBIZ_VERSION}" == "${OFBIZ_DOCKER_LEGACY_RELEASE_PREFIX}"*         && "${OFBIZ_VARIANT}" != "${OFBIZ_DOCKER_LEGACY_REQUIRED_VARIANT}" ]]; then
+        fail "Legacy Docker hedefi yalniz ${OFBIZ_DOCKER_LEGACY_REQUIRED_VARIANT} varyantini destekler."
+    fi
 
     case "${INSTALL_MODE}" in
         native)
