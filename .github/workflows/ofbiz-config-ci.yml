@@ -1,7 +1,7 @@
 # Dosya Yolu: /.github/workflows/ofbiz-config-ci.yml
 # Amac: TurkuazOFBiz araclarinin statik, release matrisi, doctor ve Docker dogrulamalarini calistirir
 # Tool - YAML
-# Version: 2.16.0
+# Version: 2.16.1
 # Aciklama: Syntax, portable katalog/Java uyumu, release metadata, runtime matrisi ve Docker testlerini kosar
 #
 # Bagimli Oldugu Katman: Tool | Controller | Service | Repo | Config
@@ -136,7 +136,11 @@ jobs:
           grep -Fq 'OFBIZ_PORTABLE_RELEASES' config/versions.conf
           grep -Fq 'fromJson(needs.portable-matrix.outputs.matrix)' .github/workflows/release.yml
           grep -Fq 'java-version: ${{ matrix.java }}' .github/workflows/release.yml
+          grep -Fq 'name: Verify current main' .github/workflows/release.yml
+          grep -Fq 'needs.current-main.outputs.current' .github/workflows/release.yml
+          grep -Fq 'turkuazofbiz-release-${{ github.event.workflow_run.head_sha }}' .github/workflows/release.yml
           ! grep -Fq -- '-OFBizVersion "24.09.07"' .github/workflows/release.yml
+          grep -Fq '$metadataLines -notcontains "platform=windows-x64"' tools/portable/test-windows-portable.ps1
 
       - name: Validate portable catalog
         shell: bash
