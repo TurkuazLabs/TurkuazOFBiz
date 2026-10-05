@@ -1,7 +1,7 @@
 // Dosya Yolu: /tools/portable/PortableBootstrap.java
 // Amac: Windows portable OFBiz ilk calistirma guvenlik verilerini yerel olarak uretir
 // Tool - Java
-// Version: 1.2.0
+// Version: 1.2.1
 // Aciklama: Java 8-17 ortak API tabaninda SecureRandom ile portable guvenlik ve runtime admin verilerini hazirlar
 //
 // Bagimli Oldugu Katman: Tool | Config
@@ -9,6 +9,9 @@
 package org.turkuazlabs.ofbiz.portable;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.charset.CharacterCodingException;
+import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -99,10 +102,34 @@ public final class PortableBootstrap {
         Files.createDirectories(configDir);
         Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
 
-        List<String> lines = new ArrayList<String>(Files.readAllLines(target, StandardCharsets.UTF_8));
+        List<String> lines = readPropertyLines(target);
         replaceProperty(lines, "login.secret_key_string", loginSecret);
         replaceProperty(lines, "security.token.key", tokenKey);
         Files.write(target, lines, StandardCharsets.UTF_8);
+    }
+
+    private static List<String> readPropertyLines(Path file) throws IOException {
+        byte[] bytes = Files.readAllBytes(file);
+        String text;
+
+        try {
+            text = StandardCharsets.UTF_8.newDecoder()
+                    .onMalformedInput(CodingErrorAction.REPORT)
+                    .onUnmappableCharacter(CodingErrorAction.REPORT)
+                    .decode(ByteBuffer.wrap(bytes))
+                    .toString();
+        } catch (CharacterCodingException ex) {
+            text = new String(bytes, StandardCharsets.ISO_8859_1);
+        }
+
+        String[] rawLines = text.split("\\r?\\n", -1);
+        List<String> lines = new ArrayList<String>(rawLines.length);
+
+        for (String line : rawLines) {
+            lines.add(line);
+        }
+
+        return lines;
     }
 
     private static void replaceProperty(List<String> lines, String key, String value) {
