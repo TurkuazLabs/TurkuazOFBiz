@@ -1,7 +1,7 @@
 # Dosya Yolu: /CHANGELOG.md
 # Amac: TurkuazOFBiz surumlerindeki kullaniciya donuk degisiklikleri kaydeder
 # View - Markdown
-# Version: 1.6.0
+# Version: 1.7.0
 # Aciklama: Semantic versioning tabanli proje degisiklik gecmisi
 #
 # Bagimli Oldugu Katman: View
@@ -11,6 +11,29 @@
 Tum dikkat cekici TurkuazOFBiz degisiklikleri bu dosyada kaydedilir.
 
 Surumleme Semantic Versioning mantigini izler.
+
+## [1.7.0] - 2026-10-05
+
+### Added
+
+- Windows portable release hedefleri icin merkezi `OFBIZ_PORTABLE_RELEASES` katalogu.
+- Portable paket icine `portable-java-major.txt` ve `portable-metadata.properties` metadata dosyalari.
+- Release workflow icin config tabanli dinamik Windows portable build matrisi.
+- 24.09.07 / Java 17, 18.12.19 / Java 8 ve 17.12.09 / Java 8 portable hedefleri.
+- CI icinde portable katalog tutarliligi ve Java 8 source/API uyumluluk derleme kontrolu.
+
+### Changed
+
+- Portable Java helper Java 17 API bagimliligindan Java 8-17 ortak API tabanina indirildi.
+- Windows wildcard launcher Java major metadata'sini okuyarak `--add-opens` parametresini yalnizca Java 9+ runtime'larda kullanir.
+- Portable builder OFBiz surumunun Java major degerini `config/versions.conf` katalogundan cozer ve yanlis JDK ile build'i reddeder.
+- Release workflow sabit 24.09.07 hedefi yerine merkezi portable matrisi kullanir.
+- GitHub Release tum portable hedeflerin Demo/Runtime ZIP ve SHA-256 dosyalarini otomatik toplar.
+
+### Verified
+
+- Portable helper `javac --release 8` ile CI'da derlenir.
+- Her portable paket smoke testte OFBiz surumu, Java major, mode ve bundled Java runtime metadata'si ile dogrulanir.
 
 ## [1.6.0] - 2026-10-05
 
