@@ -1,8 +1,8 @@
 // Dosya Yolu: /tools/portable/PortableBootstrap.java
 // Amac: Windows portable OFBiz ilk calistirma guvenlik verilerini yerel olarak uretir
 // Tool - Java
-// Version: 1.1.0
-// Aciklama: SecureRandom ile admin/shutdown/JWT anahtarlari uretir, classpath config override'ini ve runtime admin import XML'ini hazirlar
+// Version: 1.2.0
+// Aciklama: Java 8-17 ortak API tabaninda SecureRandom ile portable guvenlik ve runtime admin verilerini hazirlar
 //
 // Bagimli Oldugu Katman: Tool | Config
 
@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -36,7 +37,7 @@ public final class PortableBootstrap {
             System.exit(2);
         }
 
-        Path root = Path.of(args[1]).toAbsolutePath().normalize();
+        Path root = Paths.get(args[1]).toAbsolutePath().normalize();
         String mode = args[2].toLowerCase();
 
         if (!"demo".equals(mode) && !"runtime".equals(mode)) {
@@ -76,10 +77,9 @@ public final class PortableBootstrap {
                     "ofbiz" + System.lineSeparator());
         }
 
-        Files.writeString(
+        writePrivateText(
                 initialized,
-                "portable security initialized" + System.lineSeparator(),
-                StandardCharsets.UTF_8);
+                "portable security initialized" + System.lineSeparator());
     }
 
     private static void prepareSecurityOverride(Path root, String loginSecret, String tokenKey)
@@ -99,7 +99,7 @@ public final class PortableBootstrap {
         Files.createDirectories(configDir);
         Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
 
-        List<String> lines = new ArrayList<>(Files.readAllLines(target, StandardCharsets.UTF_8));
+        List<String> lines = new ArrayList<String>(Files.readAllLines(target, StandardCharsets.UTF_8));
         replaceProperty(lines, "login.secret_key_string", loginSecret);
         replaceProperty(lines, "security.token.key", tokenKey);
         Files.write(target, lines, StandardCharsets.UTF_8);
@@ -161,19 +161,22 @@ public final class PortableBootstrap {
 
     private static void writeAdminXml(Path file, String encodedPassword)
             throws IOException {
-        String xml = """
-                <?xml version="1.0" encoding="UTF-8"?>
-                <entity-engine-xml>
-                    <UserLogin userLoginId="admin" currentPassword="%s" requirePasswordChange="Y"/>
-                    <UserLoginSecurityGroup groupId="SUPER" userLoginId="admin" fromDate="2001-01-01 12:00:00.0"/>
-                </entity-engine-xml>
-                """.formatted(encodedPassword);
+        String lineSeparator = System.lineSeparator();
+        String xml =
+                "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + lineSeparator
+                + "<entity-engine-xml>" + lineSeparator
+                + "    <UserLogin userLoginId=\"admin\" currentPassword=\""
+                + encodedPassword
+                + "\" requirePasswordChange=\"Y\"/>" + lineSeparator
+                + "    <UserLoginSecurityGroup groupId=\"SUPER\" userLoginId=\"admin\" "
+                + "fromDate=\"2001-01-01 12:00:00.0\"/>" + lineSeparator
+                + "</entity-engine-xml>" + lineSeparator;
 
         writePrivateText(file, xml);
     }
 
     private static void writePrivateText(Path file, String content)
             throws IOException {
-        Files.writeString(file, content, StandardCharsets.UTF_8);
+        Files.write(file, content.getBytes(StandardCharsets.UTF_8));
     }
 }
