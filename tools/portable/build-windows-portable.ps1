@@ -1,7 +1,7 @@
 # Dosya Yolu: /tools/portable/build-windows-portable.ps1
 # Amac: Apache OFBiz ve Temurin JDK iceren Windows x64 portable release paketlerini uretir
 # Tool - PowerShell
-# Version: 1.2.0
+# Version: 1.2.1
 # Aciklama: Merkezi release katalogundan Java major cozer, Java 8-17 uyumlu Demo/Runtime portable ZIP ve SHA-256 uretir
 #
 # Bagimli Oldugu Katman: Tool | Config | View
@@ -186,7 +186,7 @@ function Build-PortableHelper {
         Fail "Portable helper javac derlemesi basarisiz."
     }
 
-    & $jar --create --file $jarFile --main-class org.turkuazlabs.ofbiz.portable.PortableBootstrap -C $classes .
+    & $jar cfe $jarFile org.turkuazlabs.ofbiz.portable.PortableBootstrap -C $classes .
     if ($LASTEXITCODE -ne 0) {
         Fail "Portable helper JAR olusturulamadi."
     }
