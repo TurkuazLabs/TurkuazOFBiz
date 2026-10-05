@@ -1,7 +1,7 @@
 # Dosya Yolu: /install.sh
 # Amac: Linux ve WSL kullanicisi icin Native veya Docker TurkuazOFBiz kurulumunu tek arabirimden yonetir
 # Controller - Shell
-# Version: 2.0.1
+# Version: 2.0.2
 # Aciklama: Ortak mode/target/version/variant modeliyle native Linux ve Docker kurulum, start, stop, status, doctor ve open aksiyonlarini yonlendirir
 #
 # Bagimli Oldugu Katman: Controller | Service | Repo | Tool | View | Config
@@ -22,7 +22,7 @@ OFBIZ_VERSION="${OFBIZ_VERSION:-}"
 OFBIZ_VARIANT="${OFBIZ_VARIANT:-}"
 OFBIZ_HTTPS_PORT="${OFBIZ_HTTPS_PORT:-}"
 OFBIZ_APP_PATH="${OFBIZ_APP_PATH:-/partymgr}"
-NATIVE_INSTALL_ROOT="${OFBIZ_NATIVE_INSTALL_ROOT:-/opt/ofbiz}"
+NATIVE_INSTALL_ROOT="${OFBIZ_NATIVE_INSTALL_ROOT:-}"
 
 log() {
     printf '\n[TurkuazOFBiz] %s\n' "$*"
@@ -302,6 +302,7 @@ ensure_defaults() {
     OFBIZ_VERSION="${OFBIZ_VERSION:-24.09.07}"
     OFBIZ_VARIANT="${OFBIZ_VARIANT:-demo}"
     OFBIZ_HTTPS_PORT="${OFBIZ_HTTPS_PORT:-8443}"
+    NATIVE_INSTALL_ROOT="${NATIVE_INSTALL_ROOT:-/opt/ofbiz}"
 }
 
 ensure_docker() {
