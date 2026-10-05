@@ -1,7 +1,7 @@
 # Dosya Yolu: /install.sh
 # Amac: Linux ve WSL kullanicisi icin Native veya Docker TurkuazOFBiz kurulumunu tek arabirimden yonetir
 # Controller - Shell
-# Version: 2.1.0
+# Version: 2.1.1
 # Aciklama: Ortak mode/target/version/variant modeliyle native Linux ve Docker kurulum, start, stop, status, doctor ve open aksiyonlarini yonlendirir
 #
 # Bagimli Oldugu Katman: Controller | Service | Repo | Tool | View | Config
@@ -288,6 +288,7 @@ target_type=${TARGET_TYPE}
 target=${OFBIZ_VERSION}
 variant=${OFBIZ_VARIANT}
 https_port=${OFBIZ_HTTPS_PORT}
+app_path=${OFBIZ_APP_PATH}
 native_install_root=${NATIVE_INSTALL_ROOT}
 EOF
 
@@ -307,6 +308,7 @@ restore_state() {
     OFBIZ_VERSION="${OFBIZ_VERSION:-$(state_value target)}"
     OFBIZ_VARIANT="${OFBIZ_VARIANT:-$(state_value variant)}"
     OFBIZ_HTTPS_PORT="${OFBIZ_HTTPS_PORT:-$(state_value https_port)}"
+    OFBIZ_APP_PATH="${OFBIZ_APP_PATH:-$(state_value app_path)}"
     NATIVE_INSTALL_ROOT="${NATIVE_INSTALL_ROOT:-$(state_value native_install_root)}"
 }
 
@@ -507,7 +509,6 @@ install_ofbiz() {
 
     repo_root="$(resolve_repo_root)"
     load_installer_config "${repo_root}"
-    ensure_defaults
     select_install_mode
     select_target "${repo_root}"
     ensure_defaults
@@ -668,6 +669,8 @@ case "${ACTION}" in
         if [[ -f "${STATE_FILE}" ]]; then
             restore_state
         else
+            repo_root="$(resolve_repo_root)"
+            load_installer_config "${repo_root}"
             ensure_defaults
         fi
         open_browser
