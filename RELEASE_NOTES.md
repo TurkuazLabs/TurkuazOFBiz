@@ -1,82 +1,82 @@
 # Dosya Yolu: /RELEASE_NOTES.md
-# Amac: TurkuazOFBiz v1.6.0 GitHub release notlarini hazirlar
+# Amac: TurkuazOFBiz v1.7.0 GitHub release notlarini hazirlar
 # View - Markdown
-# Version: 1.6.0
-# Aciklama: Native Windows portable OFBiz dagitim modelini tanitir
+# Version: 1.7.0
+# Aciklama: Config tabanli cok-surumlu Windows portable dagitim modelini tanitir
 #
 # Bagimli Oldugu Katman: View | Tool | Config
 
-# TurkuazOFBiz v1.6.0
+# TurkuazOFBiz v1.7.0
 
-v1.6.0 ile Windows icin ana kullanim modeli native portable OFBiz paketine tasindi.
+v1.7.0 ile Windows portable dagitim tek bir OFBiz surumune bagli olmaktan cikarildi.
 
-## Portable paketler
+## Portable hedefler
 
-- TurkuazOFBiz-Portable-24.09.07-Demo-win-x64.zip
-- TurkuazOFBiz-Portable-24.09.07-Runtime-win-x64.zip
+Release matrisi merkezi `config/versions.conf` katalogundan uretilir:
+
+~~~text
+OFBiz 24.09.07 -> Temurin Java 17
+OFBiz 18.12.19 -> Temurin Java 8
+OFBiz 17.12.09 -> Temurin Java 8
+~~~
+
+Her hedef icin iki paket yayinlanir:
+
+~~~text
+TurkuazOFBiz-Portable-<version>-Demo-win-x64.zip
+TurkuazOFBiz-Portable-<version>-Runtime-win-x64.zip
+~~~
 
 Her ZIP kendi SHA-256 dosyasi ile yayinlanir.
 
-## Ne gerekmez?
+## Java uyumlulugu
 
-Portable pakette:
+Portable helper Java 8-17 ortak API tabanina indirildi.
 
-- Docker Desktop gerekmez.
-- WSL gerekmez.
-- Windows'a Java kurmak gerekmez.
-- PowerShell script execution policy degistirmek gerekmez.
-- Registry kurulumu gerekmez.
+Windows launcher paket icindeki `portable-java-major.txt` metadata'sini okur. Java 17 tarafinda gerekli module open parametresi kullanilirken Java 8 tarafinda desteklenmeyen `--add-opens` parametresi verilmez.
 
-Temurin JDK 17 paket icindedir.
+Portable builder secilen OFBiz release icin gerekli Java major degerini merkezi katalogdan cozer. Yanlis JDK ile build denenirse paketleme baslamadan hata verir.
 
-## Kullanici arayuzu
+## Portable metadata
 
-ZIP'i bosluk icermeyen bir klasore cikarin ve TurkuazOFBiz.cmd dosyasina cift tiklayin.
+Her cikartilan portable paket su metadata'yi tasir:
 
-Menu:
+~~~text
+portable-version.txt
+portable-java-major.txt
+portable-mode.txt
+portable-metadata.properties
+~~~
 
-1. Baslat
-2. Durdur
-3. Durum
-4. Tarayicida Ac
-5. Ilk Admin Bilgisi
+Bu metadata hem kullanici paketi hem CI smoke testi tarafindan ayni hedefin dogrulanmasi icin kullanilir.
 
-## Demo
+## Guvenlik
 
-Demo verisi release CI sirasinda onceden yuklenir.
+Demo paketi resmi demo admin davranisini korur.
 
-Ilk giris:
+Runtime paketi ilk calistirmada yerel olarak:
 
-    admin / ofbiz
-
-## Runtime
-
-Runtime seed verisi release CI sirasinda onceden yuklenir.
-
-Ilk Start.cmd calismasinda paket icindeki Java helper SecureRandom ile:
-
-- benzersiz admin parolasi,
-- benzersiz OFBiz shutdown anahtari,
-- benzersiz login/JWT secret degerleri
+- guclu admin parolasi,
+- OFBiz shutdown anahtari,
+- login secret,
+- JWT/token anahtari
 
 uretir.
 
-Ilk admin parolasi data\initial-admin-password.txt dosyasina yazilir.
+Sabit production parolasi release asset'ine gomulmez.
 
 ## Release dogrulamasi
 
-GitHub Release yayinlanmadan once Windows runner:
+GitHub Release yayinlanmadan once her portable hedef:
 
-- Apache 24.09.07 ZIP SHA-512 dogrulamasi yapar,
-- distZip uretir,
-- Temurin JDK 17'yi pakete koyar,
-- generated bin\ofbiz.bat yerine kisa Java wildcard launcher kullanir,
-- Demo ve Runtime verisini preload eder,
-- iki ZIP'i de acar,
-- bundled Java ile Start.cmd calistirir,
-- https://localhost:8443/partymgr endpoint'ini dogrular,
-- Stop.cmd ile OFBiz'i kapatir.
+- resmi Apache OFBiz ZIP ve SHA-512 dogrulamasindan,
+- uygun Temurin JDK ile distZip build'inden,
+- Demo ve Runtime preload isleminden,
+- bundled Java metadata kontrolunden,
+- gercek `https://localhost:8443/partymgr` readiness testinden,
+- Start/Stop smoke testinden,
+- ZIP SHA-256 dogrulamasindan
 
-Windows CMD'nin "The input line is too long" sinirina karsi portable runtime `config;lib-extra\*;lib\*` classpath modelini kullanir. OFBiz Start ana sinifi paket icindeki Java ile dogrudan baslatilir.
+gecer.
 
-Docker/WSL installer v1.6.0'da opsiyonel alternatif olarak korunur.
+Docker/WSL installer alternatif calisma modu olarak korunur.
