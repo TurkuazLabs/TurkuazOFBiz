@@ -21,6 +21,10 @@ Surumleme Semantic Versioning mantigini izler.
 - Release workflow icin config tabanli dinamik Windows portable build matrisi.
 - 24.09.07 / Java 17, 18.12.19 / Java 8 ve legacy-adapter tabanli 17.12.09 / Java 8 native portable hedefleri.
 - CI icinde portable katalog tutarliligi ve Java 8 source/API uyumluluk derleme kontrolu.
+- Windows ve Linux icin ortak Native/Docker kurulum modu modeli.
+- Windows installer icinde release asset'inden SHA-256 dogrulamali native portable kurulum.
+- Linux installer icinde Docker gerektirmeyen native release/snapshot kurulumu.
+- Merkezi `config/installer.conf` kurulum modu varsayilanlari.
 
 ### Changed
 
@@ -29,6 +33,10 @@ Surumleme Semantic Versioning mantigini izler.
 - Portable builder OFBiz surumunun Java major degerini `config/versions.conf` katalogundan cozer ve yanlis JDK ile build'i reddeder.
 - Release workflow sabit 24.09.07 hedefi yerine merkezi portable matrisi kullanir.
 - GitHub Release tum portable hedeflerin Demo/Runtime ZIP ve SHA-256 dosyalarini otomatik toplar.
+- Windows `TurkuazOFBiz-Setup.zip` artik ilk adimda Native Portable veya Docker secimi sunar.
+- Linux `install.sh` ayni mode/target/version/variant modelini kullanir ve `curl | bash` akisi icinde /dev/tty uzerinden interaktif menu sunar.
+- Native Windows modu WSL/Docker koduna girmez; Docker modu mevcut WSL2 + Docker Desktop davranisini korur.
+- Linux native runtime adaptoruna `status` aksiyonu eklendi.
 
 ### Fixed
 
@@ -36,6 +44,9 @@ Surumleme Semantic Versioning mantigini izler.
 - Eski basarili CI kosularinin current main degilken pahali Windows portable build baslatmasi engellendi.
 - Ayni validated commit icin yinelenen release workflow kosulari concurrency grubu ile tekillestirildi.
 - Ayni branch'teki eski CI kosulari yeni commit geldiginde concurrency ile iptal edilerek gereksiz runtime/Docker tekrarlarinin kuyruga yigilmamasi saglandi.
+- Eski Windows installer state dosyalari `install_mode` alani olmadiginda Docker kurulumu olarak geriye uyumlu okunur.
+- Linux native ozel install root degeri state dosyasinda korunur.
+- Windows `doctor` ilk kurulumdan once WSL istemek yerine Native kontrolunu varsayilan kullanir.
 
 ### Verified
 
