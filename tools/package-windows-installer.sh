@@ -1,8 +1,8 @@
 # Dosya Yolu: /tools/package-windows-installer.sh
 # Amac: Windows launcher ve PowerShell installer'i tek indirilebilir ZIP paketi haline getirir
 # Tool - Shell
-# Version: 1.0.0
-# Aciklama: Yerel launcher, PS1 ve kullanim notunu paketler; SHA-256 checksum uretir
+# Version: 1.1.0
+# Aciklama: Native portable ve opsiyonel Docker kurulumunu sunan launcher, PS1 ve kullanim notunu paketler
 #
 # Bagimli Oldugu Katman: Tool | View
 
@@ -27,7 +27,8 @@ TurkuazOFBiz Windows Kurulumu
 
 1. Bu ZIP dosyasini normal bir klasore tamamen cikarin.
 2. TurkuazOFBiz-Launcher.cmd dosyasina cift tiklayin.
-3. OFBiz release/snapshot ve Demo/Runtime secimini menuden yapin.
+3. Once Native Portable veya Docker kurulum modunu secin.
+4. Ardindan OFBiz hedefi ve Demo/Runtime secimini yapin.
 
 Launcher:
 - Internetten PowerShell kodu indirmez.
@@ -35,7 +36,13 @@ Launcher:
 - Paketteki yerel TurkuazOFBiz-Installer.ps1 dosyasinin Windows internet blokunu kaldirir.
 - Hata olursa pencereyi acik tutar.
 
-Gereksinimler:
+Native Portable gereksinimleri:
+- Windows 10/11
+- Docker gerekmez
+- WSL gerekmez
+- Sistem Java kurulumu gerekmez
+
+Docker modu gereksinimleri:
 - Windows 10/11
 - WSL2 Linux dagitimi (Ubuntu-24.04 onerilir)
 - Docker Desktop + WSL integration
