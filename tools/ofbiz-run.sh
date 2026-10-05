@@ -1,8 +1,8 @@
 # Dosya Yolu: /tools/ofbiz-run.sh
 # Amac: Verilen OFBiz kurulum dizinini verilen JDK ile calistirir
 # Tool - Shell
-# Version: 2.0.0
-# Aciklama: Runtime Service tarafindan cagrilan baslatma, arka plan, durdurma ve Java adaptorudur
+# Version: 2.1.0
+# Aciklama: Runtime Service tarafindan cagrilan baslatma, arka plan, durum, durdurma ve Java adaptorudur
 #
 # Bagimli Oldugu Katman: Tool
 
@@ -33,6 +33,9 @@ case "${RUNTIME_ACTION}" in
         ;;
     background)
         ./gradlew "ofbizBackground --start"
+        ;;
+    status)
+        ./gradlew "ofbiz --status"
         ;;
     stop)
         ./gradlew "ofbiz --shutdown"
