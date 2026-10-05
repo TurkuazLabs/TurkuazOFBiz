@@ -34,6 +34,12 @@ Surumleme Semantic Versioning mantigini izler.
 - Docker/WSL installer opsiyonel alternatif olarak korunur.
 - Portable runtime PowerShell Execution Policy, Docker Desktop ve WSL'den bagimsizdir.
 
+### Fixed
+
+- Apache distZip generated bin\ofbiz.bat dosyasinin Windows'ta "The input line is too long" hatasina yol acan uzun classpath'i portable akisindan kaldirildi.
+- Portable preload, start, stop ve status islemleri kisa Java wildcard classpath launcher'ina tasindi.
+- Portable login/JWT secret override'i gercek runtime classpath'indeki ofbiz\config\security.properties dosyasina tasindi.
+
 ### Security
 
 - Runtime portable public release icine sabit production admin parolasi gomulmez.

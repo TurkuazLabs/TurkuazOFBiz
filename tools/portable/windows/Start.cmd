@@ -1,8 +1,8 @@
 :: Dosya Yolu: /tools/portable/windows/Start.cmd
 :: Amac: Windows portable Apache OFBiz runtime'ini baslatir
 :: Tool - Batch
-:: Version: 1.0.1
-:: Aciklama: Ilk calistirma guvenligini hazirlar, runtime admin hesabini yukler, readiness bekler ve tarayiciyi acar
+:: Version: 1.1.0
+:: Aciklama: Ilk calistirma guvenligini hazirlar, runtime admin hesabini yukler, kisa Java launcher ile readiness bekler ve tarayiciyi acar
 ::
 :: Bagimli Oldugu Katman: Tool
 
@@ -28,15 +28,13 @@ if not defined ADMIN_KEY (
     goto fail
 )
 
-set "JAVA_OPTS=-Dofbiz.admin.key=!ADMIN_KEY!"
+set "TURKUAZ_ADMIN_KEY=!ADMIN_KEY!"
 
 if /I "%MODE%"=="runtime" if not exist "%TURKUAZ_DATA%\runtime-admin-loaded.flag" (
     echo.
     echo [TurkuazOFBiz] Runtime admin hesabi ilk kez hazirlaniyor...
-    pushd "%OFBIZ_HOME%"
-    call "%OFBIZ_HOME%\bin\ofbiz.bat" --load-data "file=%TURKUAZ_DATA%\AdminUserLoginData.xml"
+    call "%~dp0_ofbiz.cmd" --load-data "file=%TURKUAZ_DATA%\AdminUserLoginData.xml"
     set "LOAD_EXIT=!ERRORLEVEL!"
-    popd
 
     if not "!LOAD_EXIT!"=="0" (
         echo [TurkuazOFBiz] HATA: Runtime admin hesabi yuklenemedi.
@@ -57,7 +55,7 @@ if not errorlevel 1 (
 
 echo.
 echo [TurkuazOFBiz] Apache OFBiz baslatiliyor...
-start "TurkuazOFBiz" /min cmd.exe /d /c call "%OFBIZ_HOME%\bin\ofbiz.bat" --start
+start "TurkuazOFBiz" /min cmd.exe /d /c call "%~dp0_ofbiz.cmd" --start
 
 where curl.exe >nul 2>&1
 if errorlevel 1 (

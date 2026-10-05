@@ -1,8 +1,8 @@
 // Dosya Yolu: /tools/portable/PortableBootstrap.java
 // Amac: Windows portable OFBiz ilk calistirma guvenlik verilerini yerel olarak uretir
 // Tool - Java
-// Version: 1.0.0
-// Aciklama: SecureRandom ile admin/shutdown/JWT anahtarlari uretir ve runtime admin import XML'ini hazirlar
+// Version: 1.1.0
+// Aciklama: SecureRandom ile admin/shutdown/JWT anahtarlari uretir, classpath config override'ini ve runtime admin import XML'ini hazirlar
 //
 // Bagimli Oldugu Katman: Tool | Config
 
@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -59,7 +60,7 @@ public final class PortableBootstrap {
         String tokenKey = randomBase64(48);
 
         writePrivateText(dataDir.resolve("admin-key.txt"), adminKey + System.lineSeparator());
-        patchSecurityProperties(root, loginSecret, tokenKey);
+        prepareSecurityOverride(root, loginSecret, tokenKey);
 
         if ("runtime".equals(mode)) {
             String password = randomPassword(32);
@@ -81,22 +82,27 @@ public final class PortableBootstrap {
                 StandardCharsets.UTF_8);
     }
 
-    private static void patchSecurityProperties(Path root, String loginSecret, String tokenKey)
+    private static void prepareSecurityOverride(Path root, String loginSecret, String tokenKey)
             throws IOException {
-        Path file = root.resolve("ofbiz")
+        Path source = root.resolve("ofbiz")
                 .resolve("framework")
                 .resolve("security")
                 .resolve("config")
                 .resolve("security.properties");
+        Path configDir = root.resolve("ofbiz").resolve("config");
+        Path target = configDir.resolve("security.properties");
 
-        if (!Files.isRegularFile(file)) {
-            throw new IOException("security.properties not found: " + file);
+        if (!Files.isRegularFile(source)) {
+            throw new IOException("source security.properties not found: " + source);
         }
 
-        List<String> lines = new ArrayList<>(Files.readAllLines(file, StandardCharsets.UTF_8));
+        Files.createDirectories(configDir);
+        Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
+
+        List<String> lines = new ArrayList<>(Files.readAllLines(target, StandardCharsets.UTF_8));
         replaceProperty(lines, "login.secret_key_string", loginSecret);
         replaceProperty(lines, "security.token.key", tokenKey);
-        Files.write(file, lines, StandardCharsets.UTF_8);
+        Files.write(target, lines, StandardCharsets.UTF_8);
     }
 
     private static void replaceProperty(List<String> lines, String key, String value) {

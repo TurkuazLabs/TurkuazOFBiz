@@ -1,8 +1,8 @@
 # Dosya Yolu: /tools/portable/build-windows-portable.ps1
 # Amac: Apache OFBiz ve Temurin JDK iceren Windows x64 portable release paketlerini uretir
 # Tool - PowerShell
-# Version: 1.0.2
-# Aciklama: Apache release checksum dogrular, distZip olusturur, Demo/Runtime verisini preload eder ve portable ZIP/SHA-256 uretir
+# Version: 1.1.0
+# Aciklama: Apache release checksum dogrular, distZip olusturur, Java wildcard launcher ile Demo/Runtime preload eder ve portable ZIP/SHA-256 uretir
 #
 # Bagimli Oldugu Katman: Tool | Config | View
 
@@ -173,46 +173,74 @@ yalnizca ilk parolayi temsil eder.
 "@ | Set-Content -Path (Join-Path $Root "README-FIRST.txt") -Encoding UTF8
 }
 
+function Invoke-PortableOFBiz {
+    param(
+        [string]$PortableRoot,
+        [string[]]$OFBizArguments
+    )
+
+    $ofbizHome = Join-Path $PortableRoot "ofbiz"
+    $javaHome = Join-Path $PortableRoot "java"
+    $java = Join-Path $javaHome "bin\java.exe"
+    $libDir = Join-Path $ofbizHome "lib"
+    $configDir = Join-Path $ofbizHome "config"
+    $libExtraDir = Join-Path $ofbizHome "lib-extra"
+
+    if (-not (Test-Path $java)) {
+        Fail "Portable Java bulunamadi: $java"
+    }
+
+    if (-not (Test-Path $libDir)) {
+        Fail "Portable OFBiz lib klasoru bulunamadi: $libDir"
+    }
+
+    New-Item -ItemType Directory -Force -Path $configDir | Out-Null
+    New-Item -ItemType Directory -Force -Path $libExtraDir | Out-Null
+
+    $classpath = "$configDir;$libExtraDir\*;$libDir\*"
+    $javaArguments = @(
+        "-Xms128M",
+        "-Xmx1024M",
+        "-Djdk.serialFilter=maxarray=100000;maxdepth=20;maxrefs=1000;maxbytes=500000",
+        "--add-opens=java.base/java.util=ALL-UNNAMED",
+        "-cp",
+        $classpath,
+        "org.apache.ofbiz.base.start.Start"
+    ) + $OFBizArguments
+
+    Push-Location $ofbizHome
+    try {
+        & $java @javaArguments
+        $exitCode = $LASTEXITCODE
+    }
+    finally {
+        Pop-Location
+    }
+
+    if ($exitCode -ne 0) {
+        Fail "Portable OFBiz Java islemi basarisiz. Exit code: $exitCode"
+    }
+}
+
 function Preload-OFBizData {
     param(
         [string]$PortableRoot,
         [string]$Mode
     )
 
+    if ($Mode -eq "demo") {
+        Write-Step "Demo verisi preload ediliyor"
+        Invoke-PortableOFBiz -PortableRoot $PortableRoot -OFBizArguments @("--load-data")
+    }
+    else {
+        Write-Step "Runtime seed verisi preload ediliyor"
+        Invoke-PortableOFBiz -PortableRoot $PortableRoot -OFBizArguments @(
+            "--load-data",
+            "readers=seed,seed-initial"
+        )
+    }
+
     $ofbizHome = Join-Path $PortableRoot "ofbiz"
-    $javaHome = Join-Path $PortableRoot "java"
-    $ofbizBat = Join-Path $ofbizHome "bin\ofbiz.bat"
-
-    $oldJavaHome = $env:JAVA_HOME
-    $oldPath = $env:PATH
-
-    try {
-        $env:JAVA_HOME = $javaHome
-        $env:PATH = "$javaHome\bin;$oldPath"
-
-        Push-Location $ofbizHome
-        try {
-            if ($Mode -eq "demo") {
-                Write-Step "Demo verisi preload ediliyor"
-                & $ofbizBat --load-data
-            }
-            else {
-                Write-Step "Runtime seed verisi preload ediliyor"
-                & $ofbizBat --load-data "readers=seed,seed-initial"
-            }
-
-            if ($LASTEXITCODE -ne 0) {
-                Fail "OFBiz $Mode veri preload islemi basarisiz."
-            }
-        }
-        finally {
-            Pop-Location
-        }
-    }
-    finally {
-        $env:JAVA_HOME = $oldJavaHome
-        $env:PATH = $oldPath
-    }
 
     foreach ($cleanup in @(
         (Join-Path $ofbizHome "runtime\logs"),
@@ -250,6 +278,7 @@ function New-PortablePackage {
     foreach ($file in @(
         "TurkuazOFBiz.cmd",
         "_env.cmd",
+        "_ofbiz.cmd",
         "Start.cmd",
         "Stop.cmd",
         "Status.cmd",

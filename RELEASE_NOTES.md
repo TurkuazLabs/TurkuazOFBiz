@@ -70,10 +70,13 @@ GitHub Release yayinlanmadan once Windows runner:
 - Apache 24.09.07 ZIP SHA-512 dogrulamasi yapar,
 - distZip uretir,
 - Temurin JDK 17'yi pakete koyar,
+- generated bin\ofbiz.bat yerine kisa Java wildcard launcher kullanir,
 - Demo ve Runtime verisini preload eder,
 - iki ZIP'i de acar,
 - bundled Java ile Start.cmd calistirir,
 - https://localhost:8443/partymgr endpoint'ini dogrular,
 - Stop.cmd ile OFBiz'i kapatir.
+
+Windows CMD'nin "The input line is too long" sinirina karsi portable runtime `config;lib-extra\*;lib\*` classpath modelini kullanir. OFBiz Start ana sinifi paket icindeki Java ile dogrudan baslatilir.
 
 Docker/WSL installer v1.6.0'da opsiyonel alternatif olarak korunur.

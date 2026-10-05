@@ -1,7 +1,7 @@
 # Dosya Yolu: /tools/portable/test-windows-portable.ps1
 # Amac: Uretilen Windows portable Demo ve Runtime paketlerini gercek HTTPS ile smoke test eder
 # Tool - PowerShell
-# Version: 1.0.0
+# Version: 1.1.0
 # Aciklama: Paketleri acar, yerel JDK ile Start/Stop akisini kosar ve /partymgr readiness ile credential durumunu dogrular
 #
 # Bagimli Oldugu Katman: Tool | View
@@ -98,13 +98,17 @@ function Test-Package {
     $root = $start.Directory.FullName
     $stop = Join-Path $root "Stop.cmd"
     $java = Join-Path $root "java\bin\java.exe"
-    $ofbiz = Join-Path $root "ofbiz\bin\ofbiz.bat"
+    $launcher = Join-Path $root "_ofbiz.cmd"
+    $ofbizLib = Join-Path $root "ofbiz\lib"
 
     if (-not (Test-Path $java)) {
         Fail "$displayMode bundled Java bulunamadi."
     }
-    if (-not (Test-Path $ofbiz)) {
-        Fail "$displayMode bin\ofbiz.bat bulunamadi."
+    if (-not (Test-Path $launcher)) {
+        Fail "$displayMode _ofbiz.cmd bulunamadi."
+    }
+    if (-not (Test-Path $ofbizLib)) {
+        Fail "$displayMode OFBiz lib klasoru bulunamadi."
     }
 
     $oldNoBrowser = $env:TURKUAZ_NO_BROWSER
@@ -123,9 +127,20 @@ function Test-Package {
         $securityFlag = Join-Path $root "data\security-initialized.flag"
         $adminKey = Join-Path $root "data\admin-key.txt"
         $passwordFile = Join-Path $root "data\initial-admin-password.txt"
+        $securityOverride = Join-Path $root "ofbiz\config\security.properties"
 
         if (-not (Test-Path $securityFlag) -or -not (Test-Path $adminKey) -or -not (Test-Path $passwordFile)) {
             Fail "$displayMode portable first-run security dosyalari eksik."
+        }
+
+        if (-not (Test-Path $securityOverride)) {
+            Fail "$displayMode security.properties classpath override olusmadi."
+        }
+
+        $securityText = Get-Content -Path $securityOverride -Raw
+        if ($securityText -notmatch '(?m)^login\.secret_key_string=.{64,}$' -or
+            $securityText -notmatch '(?m)^security\.token\.key=.{64,}$') {
+            Fail "$displayMode login/JWT secret override dogrulanamadi."
         }
 
         $password = (Get-Content -Path $passwordFile -Raw).Trim()

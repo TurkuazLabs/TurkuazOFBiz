@@ -1,7 +1,7 @@
 # Dosya Yolu: /.github/workflows/ofbiz-config-ci.yml
 # Amac: TurkuazOFBiz araclarinin statik, release matrisi, doctor ve Docker dogrulamalarini calistirir
 # Tool - YAML
-# Version: 2.14.0
+# Version: 2.15.0
 # Aciklama: Syntax, ShellCheck, release metadata, gercek release/JDK/Gradle matrisi ve Docker testlerini kosar
 #
 # Bagimli Oldugu Katman: Tool | Controller | Service | Repo | Config
@@ -114,13 +114,22 @@ jobs:
           grep -Fq 'docker build' install.ps1
           test -f tools/portable/PortableBootstrap.java
           test -f tools/portable/windows/TurkuazOFBiz.cmd
+          test -f tools/portable/windows/_ofbiz.cmd
           test -f tools/portable/windows/Start.cmd
           test -f tools/portable/windows/Stop.cmd
           test -f tools/portable/windows/Status.cmd
           grep -Fq 'SecureRandom' tools/portable/PortableBootstrap.java
+          grep -Fq 'configDir.resolve("security.properties")' tools/portable/PortableBootstrap.java
           grep -Fq 'TurkuazOFBiz-PortableHelper.jar' tools/portable/windows/Start.cmd
-          grep -Fq 'ofbiz.admin.key' tools/portable/windows/_env.cmd tools/portable/windows/Start.cmd || true
+          grep -Fq 'org.apache.ofbiz.base.start.Start' tools/portable/windows/_ofbiz.cmd
+          grep -Fq 'lib-extra\*' tools/portable/windows/_ofbiz.cmd
+          grep -Fq 'lib\*' tools/portable/windows/_ofbiz.cmd
+          ! grep -Fq 'bin\ofbiz.bat' tools/portable/windows/Start.cmd
+          ! grep -Fq 'bin\ofbiz.bat' tools/portable/windows/Stop.cmd
+          ! grep -Fq 'bin\ofbiz.bat' tools/portable/windows/Status.cmd
+          grep -Fq '"_ofbiz.cmd"' tools/portable/build-windows-portable.ps1
           grep -Fq 'distZip' tools/portable/build-windows-portable.ps1
+          grep -Fq 'Invoke-PortableOFBiz' tools/portable/build-windows-portable.ps1
           grep -Fq 'readers=seed,seed-initial' tools/portable/build-windows-portable.ps1
 
       - name: Validate PowerShell tools

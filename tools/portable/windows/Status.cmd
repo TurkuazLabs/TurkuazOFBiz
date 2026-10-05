@@ -1,8 +1,8 @@
 :: Dosya Yolu: /tools/portable/windows/Status.cmd
 :: Amac: Windows portable Apache OFBiz runtime durumunu gosterir
 :: Tool - Batch
-:: Version: 1.0.0
-:: Aciklama: OFBiz admin status komutunu portable shutdown anahtari ile calistirir
+:: Version: 1.1.0
+:: Aciklama: OFBiz admin status komutunu portable shutdown anahtari ve kisa Java launcher ile calistirir
 ::
 :: Bagimli Oldugu Katman: Tool
 
@@ -18,12 +18,10 @@ if not exist "%TURKUAZ_DATA%\admin-key.txt" (
 
 set "ADMIN_KEY="
 set /p ADMIN_KEY=<"%TURKUAZ_DATA%\admin-key.txt"
-set "JAVA_OPTS=-Dofbiz.admin.key=%ADMIN_KEY%"
+set "TURKUAZ_ADMIN_KEY=%ADMIN_KEY%"
 
-pushd "%OFBIZ_HOME%"
-call "%OFBIZ_HOME%\bin\ofbiz.bat" --status
+call "%~dp0_ofbiz.cmd" --status
 set "STATUS_EXIT=%ERRORLEVEL%"
-popd
 
 if /I not "%~1"=="quiet" pause
 exit /b %STATUS_EXIT%

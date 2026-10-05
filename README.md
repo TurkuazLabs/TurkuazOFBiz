@@ -1,7 +1,7 @@
 # Dosya Yolu: /README.md
 # Amac: TurkuazOFBiz projesinin ana giris, kurulum ve kullanim rehberini sunar
 # View - Markdown
-# Version: 3.11.0
+# Version: 3.11.1
 # Aciklama: Apache OFBiz release, snapshot, runtime ve Docker yonetim araclarini tanitir
 #
 # Bagimli Oldugu Katman: View | Controller | Service | Repo | Tool | Language | Config
@@ -59,7 +59,7 @@ TurkuazOFBiz-Portable-24.09.07-...\
   tools\
 ~~~
 
-Paket kendi Temurin JDK 17 runtime'ini tasir. Apache OFBiz `distZip` dagitimi kullanilir; Demo/Runtime verisi release CI sirasinda Windows runner'da preload edilir. Release yayinlanmadan once her iki paket de bundled Java ile gercek `https://localhost:8443/partymgr` smoke testinden gecirilir.
+Paket kendi Temurin JDK 17 runtime'ini tasir. Apache OFBiz `distZip` dagitimi kullanilir; Demo/Runtime verisi release CI sirasinda Windows runner'da preload edilir. Portable calistirma Apache'nin uzun generated Windows classpath'i yerine `config;lib-extra\*;lib\*` wildcard classpath kullanan TurkuazOFBiz launcher'i ile yapilir; boylece Windows CMD satir uzunlugu sinirina takilmaz. Release yayinlanmadan once her iki paket de bundled Java ile gercek `https://localhost:8443/partymgr` smoke testinden gecirilir.
 
 ### Docker / WSL - opsiyonel
 
