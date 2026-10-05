@@ -19,7 +19,7 @@ Surumleme Semantic Versioning mantigini izler.
 - Windows portable release hedefleri icin merkezi `OFBIZ_PORTABLE_RELEASES` katalogu.
 - Portable paket icine `portable-java-major.txt` ve `portable-metadata.properties` metadata dosyalari.
 - Release workflow icin config tabanli dinamik Windows portable build matrisi.
-- 24.09.07 / Java 17, 18.12.19 / Java 8 ve 17.12.09 / Java 8 portable hedefleri.
+- 24.09.07 / Java 17 ve 18.12.19 / Java 8 native portable hedefleri.
 - CI icinde portable katalog tutarliligi ve Java 8 source/API uyumluluk derleme kontrolu.
 
 ### Changed
@@ -33,6 +33,7 @@ Surumleme Semantic Versioning mantigini izler.
 ### Verified
 
 - Portable helper `javac --release 8` ile CI'da derlenir.
+- 17.12 serisinin `application/distZip` sunmadigi dogrulandi; native portable matrise bozuk paket olarak eklenmez.
 - Her portable paket smoke testte OFBiz surumu, Java major, mode ve bundled Java runtime metadata'si ile dogrulanir.
 
 ## [1.6.0] - 2026-10-05
