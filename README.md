@@ -1,7 +1,7 @@
 # Dosya Yolu: /README.md
 # Amac: TurkuazOFBiz projesinin ana giris, kurulum ve kullanim rehberini sunar
 # View - Markdown
-# Version: 3.11.1
+# Version: 3.12.0
 # Aciklama: Apache OFBiz release, snapshot, runtime ve Docker yonetim araclarini tanitir
 #
 # Bagimli Oldugu Katman: View | Controller | Service | Repo | Tool | Language | Config
@@ -11,7 +11,7 @@
 [![CI](https://github.com/TurkuazLabs/TurkuazOFBiz/actions/workflows/ofbiz-config-ci.yml/badge.svg)](https://github.com/TurkuazLabs/TurkuazOFBiz/actions/workflows/ofbiz-config-ci.yml)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 
-**Current version:** v1.6.0
+**Current version:** v1.7.0
 
 TurkuazOFBiz, Apache OFBiz release ve branch tabanli snapshot hedeflerini ayni arabirimden yonetmek icin gelistirilen acik kaynak yonetim aracidir.
 
@@ -19,14 +19,17 @@ Bu proje Apache OFBiz'in resmi dagitimi degildir. Apache OFBiz kaynaklarini, res
 
 ## Windows Portable - onerilen kullanim
 
-TurkuazOFBiz'in ana Windows dagitim modeli v1.6.0 ile portable pakettir. Docker, WSL, sistem Java kurulumu veya PowerShell script calistirma izni gerekmez.
+TurkuazOFBiz'in ana Windows dagitim modeli portable pakettir. Docker, WSL, sistem Java kurulumu veya PowerShell script calistirma izni gerekmez.
 
-Release iki paket uretir:
+v1.7.0 release matrisi desteklenen her ana release ailesinin guncel portable hedefi icin Demo ve Runtime paketi uretir:
 
 ~~~text
-TurkuazOFBiz-Portable-24.09.07-Demo-win-x64.zip
-TurkuazOFBiz-Portable-24.09.07-Runtime-win-x64.zip
+24.09.07 -> Java 17 -> Demo / Runtime
+18.12.19 -> Java 8  -> Demo / Runtime
+17.12.09 -> Java 8  -> Demo / Runtime
 ~~~
+
+Yayinlanan hedefler `config/versions.conf` icindeki `OFBIZ_PORTABLE_RELEASES` katalogundan gelir. Portable builder ayni katalogdan gerekli Java major degerini cozer.
 
 Demo paketi Apache OFBiz demo verisini onceden tasir. Ilk giris:
 
@@ -46,7 +49,7 @@ Kullanim:
 Portable klasor:
 
 ~~~text
-TurkuazOFBiz-Portable-24.09.07-...\
+TurkuazOFBiz-Portable-<ofbiz-version>-...\
   TurkuazOFBiz.cmd
   Start.cmd
   Stop.cmd
@@ -59,7 +62,7 @@ TurkuazOFBiz-Portable-24.09.07-...\
   tools\
 ~~~
 
-Paket kendi Temurin JDK 17 runtime'ini tasir. Apache OFBiz `distZip` dagitimi kullanilir; Demo/Runtime verisi release CI sirasinda Windows runner'da preload edilir. Portable calistirma Apache'nin uzun generated Windows classpath'i yerine `config;lib-extra\*;lib\*` wildcard classpath kullanan TurkuazOFBiz launcher'i ile yapilir; boylece Windows CMD satir uzunlugu sinirina takilmaz. Release yayinlanmadan once her iki paket de bundled Java ile gercek `https://localhost:8443/partymgr` smoke testinden gecirilir.
+Her paket hedef OFBiz surumunun gerektirdigi Temurin JDK runtime'ini kendi icinde tasir. Apache OFBiz `distZip` dagitimi kullanilir; Demo/Runtime verisi release CI sirasinda Windows runner'da preload edilir. Portable calistirma Apache'nin uzun generated Windows classpath'i yerine `config;lib-extra\*;lib\*` wildcard classpath kullanan TurkuazOFBiz launcher'i ile yapilir; boylece Windows CMD satir uzunlugu sinirina takilmaz. Release yayinlanmadan once her iki paket de bundled Java ile gercek `https://localhost:8443/partymgr` smoke testinden gecirilir.
 
 ### Docker / WSL - opsiyonel
 
@@ -211,6 +214,7 @@ release22.01 Dockerfile build check
 Windows PowerShell installer parser testi
 Linux installer Bash + ShellCheck testi
 Release installer asset kontrolu
+portable katalog ve Java 8-17 uyumluluk kontrolu
 ~~~
 
 ## Proje dosyalari
