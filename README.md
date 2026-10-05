@@ -1,7 +1,7 @@
 # Dosya Yolu: /README.md
 # Amac: TurkuazOFBiz projesinin ana giris, kurulum ve kullanim rehberini sunar
 # View - Markdown
-# Version: 3.12.0
+# Version: 3.12.1
 # Aciklama: Apache OFBiz release, snapshot, runtime ve Docker yonetim araclarini tanitir
 #
 # Bagimli Oldugu Katman: View | Controller | Service | Repo | Tool | Language | Config
@@ -26,10 +26,11 @@ v1.7.0 release matrisi desteklenen her ana release ailesinin guncel portable hed
 ~~~text
 24.09.07 -> Java 17 -> Demo / Runtime
 18.12.19 -> Java 8  -> Demo / Runtime
-17.12.09 -> Java 8  -> Demo / Runtime
 ~~~
 
 Yayinlanan hedefler `config/versions.conf` icindeki `OFBIZ_PORTABLE_RELEASES` katalogundan gelir. Portable builder ayni katalogdan gerekli Java major degerini cozer.
+
+17.12 serisi release/source ve Docker compat olarak desteklenmeye devam eder; Apache 17.12 build yapisinda `application/distZip` bulunmadigi icin native portable matrise bilincli olarak alinmaz.
 
 Demo paketi Apache OFBiz demo verisini onceden tasir. Ilk giris:
 
