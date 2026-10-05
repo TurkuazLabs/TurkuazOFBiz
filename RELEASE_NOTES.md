@@ -17,9 +17,10 @@ Release matrisi merkezi `config/versions.conf` katalogundan uretilir:
 ~~~text
 OFBiz 24.09.07 -> Temurin Java 17
 OFBiz 18.12.19 -> Temurin Java 8
+OFBiz 17.12.09 -> Temurin Java 8
 ~~~
 
-17.12 release ailesi Docker/source compat desteginde kalir. Apache 17.12 build yapisinda `application/distZip` bulunmadigi icin bu surum native portable matrise zorla eklenmez.
+Apache 17.12 build yapisinda `application/distZip` bulunmadigi icin 17.12.09 ayri legacy portable adapter ile paketlenir. Adapter kaynak runtime agacini korur, root OFBiz JAR ve Gradle runtime bagimliliklarini relocatable `lib` staging alanina toplar.
 
 Her portable hedef icin iki paket yayinlanir:
 
