@@ -1,7 +1,7 @@
 # Dosya Yolu: /tools/portable/build-windows-portable.ps1
 # Amac: Apache OFBiz ve Temurin JDK iceren Windows x64 portable release paketlerini uretir
 # Tool - PowerShell
-# Version: 1.3.0
+# Version: 1.3.1
 # Aciklama: Modern distZip ve legacy runtime staging stratejilerini secerek Java 8-17 uyumlu portable ZIP ve SHA-256 uretir
 #
 # Bagimli Oldugu Katman: Tool | Config | View
@@ -211,7 +211,7 @@ function Build-ModernDistribution {
     Push-Location $SourceRoot
     try {
         Write-Step "Apache OFBiz distZip derleniyor"
-        & (Join-Path $SourceRoot "gradlew.bat") --no-daemon distZip
+        & (Join-Path $SourceRoot "gradlew.bat") --no-daemon distZip | Out-Host
         if ($LASTEXITCODE -ne 0) {
             Fail "Apache OFBiz distZip build basarisiz."
         }
@@ -257,7 +257,7 @@ function Build-LegacyDistribution {
     Push-Location $SourceRoot
     try {
         Write-Step "Legacy OFBiz root JAR ve runtime bagimliliklari staging alani icin derleniyor"
-        & (Join-Path $SourceRoot "gradlew.bat") --no-daemon -I $LegacyStageInit "-Dturkuaz.portable.lib=$legacyLib" turkuazPortableStage
+        & (Join-Path $SourceRoot "gradlew.bat") --no-daemon -I $LegacyStageInit "-Dturkuaz.portable.lib=$legacyLib" turkuazPortableStage | Out-Host
 
         if ($LASTEXITCODE -ne 0) {
             Fail "Legacy OFBiz portable runtime staging basarisiz."
