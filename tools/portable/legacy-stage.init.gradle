@@ -1,0 +1,38 @@
+// Dosya Yolu: /tools/portable/legacy-stage.init.gradle
+// Amac: Legacy OFBiz Gradle runtime bagimliliklarini relocatable portable lib klasorune toplar
+// Tool - Gradle
+// Version: 1.0.0
+// Aciklama: 17.12 root JAR ve runtime configuration dosyalarini mutlak build yollarindan bagimsiz staging alanina kopyalar
+//
+// Bagimli Oldugu Katman: Tool | Config
+
+gradle.projectsEvaluated {
+    def root = gradle.rootProject
+
+    if (root.tasks.findByName('turkuazPortableStage') == null) {
+        root.task('turkuazPortableStage') {
+            dependsOn root.tasks.getByName('jar')
+
+            doLast {
+                def outputPath = System.getProperty('turkuaz.portable.lib')
+
+                if (!outputPath) {
+                    throw new GradleException('turkuaz.portable.lib system property is required')
+                }
+
+                def outputDir = new File(outputPath)
+                outputDir.mkdirs()
+
+                root.copy {
+                    from root.configurations.runtime
+                    into outputDir
+                }
+
+                root.copy {
+                    from root.tasks.getByName('jar').archivePath
+                    into outputDir
+                }
+            }
+        }
+    }
+}
