@@ -1,8 +1,8 @@
 :: Dosya Yolu: /tools/portable/windows/_env.cmd
 :: Amac: Windows portable TurkuazOFBiz ortak ortam degiskenlerini hazirlar
 :: Tool - Batch
-:: Version: 1.0.0
-:: Aciklama: Relative root, bundled Java, OFBiz ve portable data yollarini merkezi olarak tanimlar
+:: Version: 1.1.0
+:: Aciklama: Modern ve legacy portable dagitimlar icin relative root, bundled Java, OFBiz lib ve data yollarini dogrular
 ::
 :: Bagimli Oldugu Katman: Tool
 
@@ -29,8 +29,8 @@ if not exist "%JAVA_HOME%\bin\java.exe" (
     exit /b 3
 )
 
-if not exist "%OFBIZ_HOME%\bin\ofbiz.bat" (
-    echo [TurkuazOFBiz] HATA: Portable OFBiz runtime bulunamadi.
+if not exist "%OFBIZ_HOME%\lib" (
+    echo [TurkuazOFBiz] HATA: Portable OFBiz lib runtime bulunamadi.
     exit /b 4
 )
 
