@@ -1,8 +1,8 @@
 # Dosya Yolu: /tools/portable/build-windows-portable.ps1
 # Amac: Apache OFBiz ve Temurin JDK iceren Windows x64 portable release paketlerini uretir
 # Tool - PowerShell
-# Version: 1.2.1
-# Aciklama: Merkezi release katalogundan Java major cozer, Java 8-17 uyumlu Demo/Runtime portable ZIP ve SHA-256 uretir
+# Version: 1.3.0
+# Aciklama: Modern distZip ve legacy runtime staging stratejilerini secerek Java 8-17 uyumlu portable ZIP ve SHA-256 uretir
 #
 # Bagimli Oldugu Katman: Tool | Config | View
 
@@ -21,6 +21,7 @@ $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
 $PortableSource = Join-Path $RepoRoot "tools\portable"
 $WindowsTemplate = Join-Path $PortableSource "windows"
 $VersionsConfig = Join-Path $RepoRoot "config\versions.conf"
+$LegacyStageInit = Join-Path $PortableSource "legacy-stage.init.gradle"
 
 function Write-Step {
     param([string]$Message)
@@ -166,6 +167,114 @@ function Copy-DirectoryContents {
     Get-ChildItem -Path $Source -Force | ForEach-Object {
         Copy-Item -Path $_.FullName -Destination $Destination -Recurse -Force
     }
+}
+
+function Copy-LegacyDistributionTree {
+    param(
+        [string]$Source,
+        [string]$Destination
+    )
+
+    New-Item -ItemType Directory -Force -Path $Destination | Out-Null
+
+    Get-ChildItem -Path $Source -Force |
+        Where-Object { $_.Name -notin @("build", ".gradle") } |
+        ForEach-Object {
+            Copy-Item -Path $_.FullName -Destination $Destination -Recurse -Force
+        }
+}
+
+function Initialize-GradleWrapper {
+    param([string]$SourceRoot)
+
+    Write-Step "Gradle wrapper hazirlaniyor"
+    Push-Location $SourceRoot
+    try {
+        & (Join-Path $SourceRoot "gradle\init-gradle-wrapper.ps1")
+
+        $wrapperJar = Join-Path $SourceRoot "gradle\wrapper\gradle-wrapper.jar"
+        if (-not (Test-Path $wrapperJar)) {
+            Fail "Gradle wrapper hazirlanamadi: gradle-wrapper.jar bulunamadi."
+        }
+    }
+    finally {
+        Pop-Location
+    }
+}
+
+function Build-ModernDistribution {
+    param(
+        [string]$SourceRoot,
+        [string]$WorkDirectory
+    )
+
+    Push-Location $SourceRoot
+    try {
+        Write-Step "Apache OFBiz distZip derleniyor"
+        & (Join-Path $SourceRoot "gradlew.bat") --no-daemon distZip
+        if ($LASTEXITCODE -ne 0) {
+            Fail "Apache OFBiz distZip build basarisiz."
+        }
+    }
+    finally {
+        Pop-Location
+    }
+
+    $distZip = Get-ChildItem -Path (Join-Path $SourceRoot "build\distributions") -Filter "*.zip" |
+        Select-Object -First 1
+
+    if (-not $distZip) {
+        Fail "OFBiz distZip artefakti bulunamadi."
+    }
+
+    $distExtract = Join-Path $WorkDirectory "distribution"
+    Expand-Archive -Path $distZip.FullName -DestinationPath $distExtract -Force
+
+    $ofbizBat = Get-ChildItem -Path $distExtract -Recurse -Filter "ofbiz.bat" |
+        Where-Object { $_.Directory.Name -eq "bin" } |
+        Select-Object -First 1
+
+    if (-not $ofbizBat) {
+        Fail "distZip icinde bin\ofbiz.bat bulunamadi."
+    }
+
+    return $ofbizBat.Directory.Parent.FullName
+}
+
+function Build-LegacyDistribution {
+    param(
+        [string]$SourceRoot,
+        [string]$WorkDirectory
+    )
+
+    $legacyRoot = Join-Path $WorkDirectory "legacy-distribution"
+    $legacyLib = Join-Path $legacyRoot "lib"
+
+    Write-Step "Legacy OFBiz kaynak agaci portable staging alanina kopyalaniyor"
+    Copy-LegacyDistributionTree -Source $SourceRoot -Destination $legacyRoot
+    New-Item -ItemType Directory -Force -Path $legacyLib | Out-Null
+
+    Push-Location $SourceRoot
+    try {
+        Write-Step "Legacy OFBiz root JAR ve runtime bagimliliklari staging alani icin derleniyor"
+        & (Join-Path $SourceRoot "gradlew.bat") --no-daemon -I $LegacyStageInit "-Dturkuaz.portable.lib=$legacyLib" turkuazPortableStage
+
+        if ($LASTEXITCODE -ne 0) {
+            Fail "Legacy OFBiz portable runtime staging basarisiz."
+        }
+    }
+    finally {
+        Pop-Location
+    }
+
+    $rootJar = Get-ChildItem -Path $legacyLib -Filter "ofbiz*.jar" |
+        Select-Object -First 1
+
+    if (-not $rootJar) {
+        Fail "Legacy portable root OFBiz JAR bulunamadi."
+    }
+
+    return $legacyRoot
 }
 
 function Build-PortableHelper {
@@ -437,45 +546,14 @@ try {
         Fail "Apache OFBiz source root bulunamadi."
     }
 
-    Write-Step "Gradle wrapper hazirlaniyor"
-    Push-Location $sourceRoot.FullName
-    try {
-        & (Join-Path $sourceRoot.FullName "gradle\init-gradle-wrapper.ps1")
+    Initialize-GradleWrapper -SourceRoot $sourceRoot.FullName
 
-        $wrapperJar = Join-Path $sourceRoot.FullName "gradle\wrapper\gradle-wrapper.jar"
-        if (-not (Test-Path $wrapperJar)) {
-            Fail "Gradle wrapper hazirlanamadi: gradle-wrapper.jar bulunamadi."
-        }
-
-        Write-Step "Apache OFBiz distZip derleniyor"
-        & (Join-Path $sourceRoot.FullName "gradlew.bat") --no-daemon distZip
-        if ($LASTEXITCODE -ne 0) {
-            Fail "Apache OFBiz distZip build basarisiz."
-        }
+    if ($OFBizVersion.StartsWith("17.12.")) {
+        $distributionRoot = Build-LegacyDistribution -SourceRoot $sourceRoot.FullName -WorkDirectory $work
     }
-    finally {
-        Pop-Location
+    else {
+        $distributionRoot = Build-ModernDistribution -SourceRoot $sourceRoot.FullName -WorkDirectory $work
     }
-
-    $distZip = Get-ChildItem -Path (Join-Path $sourceRoot.FullName "build\distributions") -Filter "*.zip" |
-        Select-Object -First 1
-
-    if (-not $distZip) {
-        Fail "OFBiz distZip artefakti bulunamadi."
-    }
-
-    $distExtract = Join-Path $work "distribution"
-    Expand-Archive -Path $distZip.FullName -DestinationPath $distExtract -Force
-
-    $ofbizBat = Get-ChildItem -Path $distExtract -Recurse -Filter "ofbiz.bat" |
-        Where-Object { $_.Directory.Name -eq "bin" } |
-        Select-Object -First 1
-
-    if (-not $ofbizBat) {
-        Fail "distZip icinde bin\ofbiz.bat bulunamadi."
-    }
-
-    $distributionRoot = $ofbizBat.Directory.Parent.FullName
 
     if (-not (Test-Path (Join-Path $distributionRoot "framework\security\config\security.properties"))) {
         Fail "Portable distribution security.properties dosyasini tasimiyor."
