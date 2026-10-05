@@ -1,8 +1,8 @@
 # Dosya Yolu: /tools/portable/build-windows-portable.ps1
 # Amac: Apache OFBiz ve Temurin JDK iceren Windows x64 portable release paketlerini uretir
 # Tool - PowerShell
-# Version: 1.1.0
-# Aciklama: Apache release checksum dogrular, distZip olusturur, Java wildcard launcher ile Demo/Runtime preload eder ve portable ZIP/SHA-256 uretir
+# Version: 1.2.0
+# Aciklama: Merkezi release katalogundan Java major cozer, Java 8-17 uyumlu Demo/Runtime portable ZIP ve SHA-256 uretir
 #
 # Bagimli Oldugu Katman: Tool | Config | View
 
@@ -20,6 +20,7 @@ $ProgressPreference = "SilentlyContinue"
 $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
 $PortableSource = Join-Path $RepoRoot "tools\portable"
 $WindowsTemplate = Join-Path $PortableSource "windows"
+$VersionsConfig = Join-Path $RepoRoot "config\versions.conf"
 
 function Write-Step {
     param([string]$Message)
@@ -32,6 +33,73 @@ function Fail {
     param([string]$Message)
 
     throw "[Portable] $Message"
+}
+
+function Get-ConfigValue {
+    param([string]$Name)
+
+    $pattern = '(?m)^' + [regex]::Escape($Name) + '="([^"]*)"'
+    $text = Get-Content -Path $VersionsConfig -Raw
+    $match = [regex]::Match($text, $pattern)
+
+    if (-not $match.Success) {
+        Fail "Config degeri bulunamadi: $Name"
+    }
+
+    return $match.Groups[1].Value
+}
+
+function Test-VersionInCatalog {
+    param([string]$Version)
+
+    foreach ($series in @("24_09", "18_12", "17_12")) {
+        $releases = Get-ConfigValue -Name "OFBIZ_RELEASES_$series"
+        if (($releases -split '\s+') -contains $Version) {
+            return $true
+        }
+    }
+
+    return $false
+}
+
+function Get-PortableJavaMajor {
+    param([string]$Version)
+
+    if (-not (Test-VersionInCatalog -Version $Version)) {
+        Fail "Portable icin desteklenmeyen OFBiz release: $Version"
+    }
+
+    if ($Version.StartsWith("24.09.")) {
+        return Get-ConfigValue -Name "OFBIZ_JAVA_24_09"
+    }
+    if ($Version.StartsWith("18.12.")) {
+        return Get-ConfigValue -Name "OFBIZ_JAVA_18_12"
+    }
+    if ($Version.StartsWith("17.12.")) {
+        return Get-ConfigValue -Name "OFBIZ_JAVA_17_12"
+    }
+
+    Fail "OFBiz Java major eslemesi bulunamadi: $Version"
+}
+
+function Get-JavaHomeMajor {
+    param([string]$JavaHome)
+
+    $java = Join-Path $JavaHome "bin\java.exe"
+    if (-not (Test-Path $java)) {
+        Fail "Bundled Java bulunamadi: $java"
+    }
+
+    $versionText = (& $java -version 2>&1 | Out-String)
+
+    if ($versionText -match 'version "1\.8\.') {
+        return "8"
+    }
+    if ($versionText -match 'version "([0-9]+)\.') {
+        return $matches[1]
+    }
+
+    Fail "Bundled Java major okunamadi: $versionText"
 }
 
 function Download-WithFallback {
@@ -113,7 +181,7 @@ function Build-PortableHelper {
 
     New-Item -ItemType Directory -Force -Path $classes | Out-Null
 
-    & $javac -encoding UTF-8 -d $classes $source
+    & $javac -encoding UTF-8 -source 8 -target 8 -d $classes $source
     if ($LASTEXITCODE -ne 0) {
         Fail "Portable helper javac derlemesi basarisiz."
     }
@@ -161,7 +229,7 @@ Gereksinim:
 - Sistem Java kurulumu YOK
 - PowerShell script calistirma YOK
 
-Paket kendi Temurin JDK 17 runtime'ini tasir.
+Paket kendi Temurin JDK $PortableJavaMajor runtime'ini tasir.
 
 Adres:
 https://localhost:8443/partymgr
@@ -201,12 +269,19 @@ function Invoke-PortableOFBiz {
     $javaArguments = @(
         "-Xms128M",
         "-Xmx1024M",
-        "-Djdk.serialFilter=maxarray=100000;maxdepth=20;maxrefs=1000;maxbytes=500000",
-        "--add-opens=java.base/java.util=ALL-UNNAMED",
+        "-Djdk.serialFilter=maxarray=100000;maxdepth=20;maxrefs=1000;maxbytes=500000"
+    )
+
+    if ($PortableJavaMajor -ne "8") {
+        $javaArguments += "--add-opens=java.base/java.util=ALL-UNNAMED"
+    }
+
+    $javaArguments += @(
         "-cp",
         $classpath,
         "org.apache.ofbiz.base.start.Start"
-    ) + $OFBizArguments
+    )
+    $javaArguments += $OFBizArguments
 
     Push-Location $ofbizHome
     try {
@@ -290,6 +365,13 @@ function New-PortablePackage {
 
     $Mode | Set-Content -Path (Join-Path $root "portable-mode.txt") -Encoding ASCII
     $OFBizVersion | Set-Content -Path (Join-Path $root "portable-version.txt") -Encoding ASCII
+    $PortableJavaMajor | Set-Content -Path (Join-Path $root "portable-java-major.txt") -Encoding ASCII
+    @(
+        "ofbiz.version=$OFBizVersion",
+        "java.major=$PortableJavaMajor",
+        "mode=$Mode",
+        "platform=windows-x64"
+    ) | Set-Content -Path (Join-Path $root "portable-metadata.properties") -Encoding ASCII
     New-Item -ItemType Directory -Force -Path (Join-Path $root "data") | Out-Null
 
     Write-PortableReadme -Root $root -Mode $Mode
@@ -308,9 +390,18 @@ function New-PortablePackage {
     return $zip
 }
 
+$PortableJavaMajor = Get-PortableJavaMajor -Version $OFBizVersion
+
 if (-not $BundledJavaHome -or -not (Test-Path (Join-Path $BundledJavaHome "bin\javac.exe"))) {
     Fail "Windows JDK bulunamadi: $BundledJavaHome"
 }
+
+$ActualJavaMajor = Get-JavaHomeMajor -JavaHome $BundledJavaHome
+if ($ActualJavaMajor -ne $PortableJavaMajor) {
+    Fail "OFBiz $OFBizVersion Java $PortableJavaMajor gerektiriyor; verilen JDK Java $ActualJavaMajor."
+}
+
+Write-Step "Portable hedef: OFBiz $OFBizVersion / Java $PortableJavaMajor"
 
 $OutputDirectory = [IO.Path]::GetFullPath($OutputDirectory)
 New-Item -ItemType Directory -Force -Path $OutputDirectory | Out-Null
