@@ -1,7 +1,7 @@
 # Dosya Yolu: /.github/workflows/ofbiz-config-ci.yml
 # Amac: TurkuazOFBiz araclarinin statik, release matrisi, doctor ve Docker dogrulamalarini calistirir
 # Tool - YAML
-# Version: 2.17.0
+# Version: 2.17.1
 # Aciklama: Syntax, portable katalog/Java uyumu, release metadata, runtime matrisi ve Docker testlerini kosar
 #
 # Bagimli Oldugu Katman: Tool | Controller | Service | Repo | Config
@@ -53,6 +53,10 @@ on:
 
 permissions:
   contents: read
+
+concurrency:
+  group: turkuazofbiz-ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   validate:
