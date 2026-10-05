@@ -1,7 +1,7 @@
 # Dosya Yolu: /.github/workflows/ofbiz-config-ci.yml
 # Amac: TurkuazOFBiz araclarinin statik, release matrisi, doctor ve Docker dogrulamalarini calistirir
 # Tool - YAML
-# Version: 2.16.1
+# Version: 2.17.0
 # Aciklama: Syntax, portable katalog/Java uyumu, release metadata, runtime matrisi ve Docker testlerini kosar
 #
 # Bagimli Oldugu Katman: Tool | Controller | Service | Repo | Config
@@ -113,6 +113,7 @@ jobs:
           grep -Fq 'turkuazofbiz-$Variant-$TargetType-$safeTarget' install.ps1
           grep -Fq 'docker build' install.ps1
           test -f tools/portable/PortableBootstrap.java
+          test -f tools/portable/legacy-stage.init.gradle
           test -f tools/portable/windows/TurkuazOFBiz.cmd
           test -f tools/portable/windows/_ofbiz.cmd
           test -f tools/portable/windows/Start.cmd
@@ -133,6 +134,11 @@ jobs:
           grep -Fq 'readers=seed,seed-initial' tools/portable/build-windows-portable.ps1
           grep -Fq 'portable-java-major.txt' tools/portable/build-windows-portable.ps1
           grep -Fq 'portable-metadata.properties' tools/portable/build-windows-portable.ps1
+          grep -Fq 'Build-LegacyDistribution' tools/portable/build-windows-portable.ps1
+          grep -Fq 'turkuazPortableStage' tools/portable/legacy-stage.init.gradle
+          grep -Fq 'root.configurations.runtime' tools/portable/legacy-stage.init.gradle
+          grep -Fq 'OFBIZ_HOME%\lib' tools/portable/windows/_env.cmd
+          ! grep -Fq 'bin\ofbiz.bat' tools/portable/windows/_env.cmd
           grep -Fq 'OFBIZ_PORTABLE_RELEASES' config/versions.conf
           grep -Fq 'fromJson(needs.portable-matrix.outputs.matrix)' .github/workflows/release.yml
           grep -Fq 'java-version: ${{ matrix.java }}' .github/workflows/release.yml
