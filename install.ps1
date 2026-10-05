@@ -1,7 +1,7 @@
 # Dosya Yolu: /install.ps1
 # Amac: Windows kullanicisi icin Native portable veya Docker TurkuazOFBiz kurulumunu tek arabirimden yonetir
 # Controller - PowerShell
-# Version: 2.0.0
+# Version: 2.0.1
 # Aciklama: Ortak mode/target/version/variant modeliyle Windows native portable ve WSL/Docker kurulumlarini yonlendirir
 #
 # Bagimli Oldugu Katman: Controller | Service | Repo | Tool | View | Config
@@ -837,6 +837,9 @@ function Invoke-Doctor {
 
     if (Test-Path $StateFile) {
         Restore-InstallerState | Out-Null
+    }
+    elseif (-not $InstallMode) {
+        $script:InstallMode = "native"
     }
 
     if ($InstallMode -eq "native") {
