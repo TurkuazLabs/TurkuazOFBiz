@@ -42,6 +42,7 @@ Surumleme Semantic Versioning mantigini izler.
 - Portable helper `javac --release 8` ile CI'da derlenir.
 - 17.12 serisinin `application/distZip` sunmadigi dogrulandi; bunun yerine root OFBiz JAR + Gradle runtime bagimliliklarini relocatable `lib` staging alanina alan legacy portable adapter kullanilir.
 - Her portable paket smoke testte OFBiz surumu, Java major, mode ve bundled Java runtime metadata'si ile dogrulanir.
+- 17.12.09 legacy adapter root OFBiz JAR ve runtime dependency staging task'i Java 8 CI matrisinde gercek Gradle calismasi ile dogrulanir.
 
 ## [1.6.0] - 2026-10-05
 
