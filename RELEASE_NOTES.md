@@ -68,6 +68,8 @@ Sabit production parolasi release asset'ine gomulmez.
 
 ## Release dogrulamasi
 
+Release workflow once basarili CI commit'inin hala current `main` oldugunu dogrular. Eski CI kosulari portable build baslatmadan atlanir ve ayni commit icin yinelenen release kosulari tekillestirilir.
+
 GitHub Release yayinlanmadan once her portable hedef:
 
 - resmi Apache OFBiz ZIP ve SHA-512 dogrulamasindan,
