@@ -1,8 +1,8 @@
 # Dosya Yolu: /tools/portable/test-windows-portable.ps1
 # Amac: Uretilen Windows portable Demo ve Runtime paketlerini gercek HTTPS ile smoke test eder
 # Tool - PowerShell
-# Version: 1.1.0
-# Aciklama: Paketleri acar, yerel JDK ile Start/Stop akisini kosar ve /partymgr readiness ile credential durumunu dogrular
+# Version: 1.2.0
+# Aciklama: Surum ve Java metadata dahil portable paketleri acar, Start/Stop ve /partymgr readiness akisini dogrular
 #
 # Bagimli Oldugu Katman: Tool | View
 
@@ -10,7 +10,9 @@
 param(
     [Parameter(Mandatory = $true)]
     [string]$PackageDirectory,
-    [string]$OFBizVersion = "24.09.07"
+    [string]$OFBizVersion = "24.09.07",
+    [Parameter(Mandatory = $true)]
+    [string]$ExpectedJavaMajor
 )
 
 $ErrorActionPreference = "Stop"
@@ -85,7 +87,7 @@ function Test-Package {
         Fail "Portable paket bulunamadi: $zip"
     }
 
-    $extract = Join-Path $env:RUNNER_TEMP ("portable-smoke-" + $Mode)
+    $extract = Join-Path $env:RUNNER_TEMP ("portable-smoke-" + $OFBizVersion + "-" + $Mode)
     Remove-Item -Path $extract -Recurse -Force -ErrorAction SilentlyContinue
     New-Item -ItemType Directory -Force -Path $extract | Out-Null
     Expand-Archive -Path $zip -DestinationPath $extract -Force
@@ -100,6 +102,9 @@ function Test-Package {
     $java = Join-Path $root "java\bin\java.exe"
     $launcher = Join-Path $root "_ofbiz.cmd"
     $ofbizLib = Join-Path $root "ofbiz\lib"
+    $versionFile = Join-Path $root "portable-version.txt"
+    $javaMajorFile = Join-Path $root "portable-java-major.txt"
+    $metadataFile = Join-Path $root "portable-metadata.properties"
 
     if (-not (Test-Path $java)) {
         Fail "$displayMode bundled Java bulunamadi."
@@ -109,6 +114,35 @@ function Test-Package {
     }
     if (-not (Test-Path $ofbizLib)) {
         Fail "$displayMode OFBiz lib klasoru bulunamadi."
+    }
+    if (-not (Test-Path $versionFile) -or -not (Test-Path $javaMajorFile) -or -not (Test-Path $metadataFile)) {
+        Fail "$displayMode portable metadata dosyalari eksik."
+    }
+
+    $packageVersion = (Get-Content -Path $versionFile -Raw).Trim()
+    $packageJavaMajor = (Get-Content -Path $javaMajorFile -Raw).Trim()
+    $metadata = Get-Content -Path $metadataFile -Raw
+
+    if ($packageVersion -ne $OFBizVersion) {
+        Fail "$displayMode OFBiz metadata surumu beklenen $OFBizVersion degil: $packageVersion"
+    }
+    if ($packageJavaMajor -ne $ExpectedJavaMajor) {
+        Fail "$displayMode Java metadata major beklenen $ExpectedJavaMajor degil: $packageJavaMajor"
+    }
+    if ($metadata -notmatch "(?m)^ofbiz\.version=$([regex]::Escape($OFBizVersion))$" -or
+        $metadata -notmatch "(?m)^java\.major=$([regex]::Escape($ExpectedJavaMajor))$" -or
+        $metadata -notmatch "(?m)^mode=$Mode$") {
+        Fail "$displayMode portable metadata icerigi tutarsiz."
+    }
+
+    $javaVersionText = (& $java -version 2>&1 | Out-String)
+    if ($ExpectedJavaMajor -eq "8") {
+        if ($javaVersionText -notmatch 'version "1\.8\.') {
+            Fail "$displayMode bundled Java 8 dogrulanamadi."
+        }
+    }
+    elseif ($javaVersionText -notmatch ('version "' + [regex]::Escape($ExpectedJavaMajor) + '\.')) {
+        Fail "$displayMode bundled Java $ExpectedJavaMajor dogrulanamadi."
     }
 
     $oldNoBrowser = $env:TURKUAZ_NO_BROWSER
