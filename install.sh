@@ -1,7 +1,7 @@
 # Dosya Yolu: /install.sh
 # Amac: Linux ve WSL kullanicisi icin Native veya Docker TurkuazOFBiz kurulumunu tek arabirimden yonetir
 # Controller - Shell
-# Version: 2.0.0
+# Version: 2.0.1
 # Aciklama: Ortak mode/target/version/variant modeliyle native Linux ve Docker kurulum, start, stop, status, doctor ve open aksiyonlarini yonlendirir
 #
 # Bagimli Oldugu Katman: Controller | Service | Repo | Tool | View | Config
@@ -38,6 +38,10 @@ require_command() {
     command -v "${name}" >/dev/null 2>&1 || fail "Gerekli komut bulunamadi: ${name}"
 }
 
+can_interact() {
+    [[ -r /dev/tty && -w /dev/tty ]]
+}
+
 read_choice() {
     local prompt="${1:?prompt required}"
     local minimum="${2:?minimum required}"
@@ -47,7 +51,11 @@ read_choice() {
 
     while true; do
         printf '%s [%s]: ' "${prompt}" "${default_value}" >&2
-        IFS= read -r value || value=""
+        if can_interact; then
+            IFS= read -r value < /dev/tty || value=""
+        else
+            value=""
+        fi
 
         [[ -n "${value}" ]] || value="${default_value}"
 
@@ -160,7 +168,7 @@ config_multiline_values() {
 select_install_mode() {
     local choice
 
-    [[ -t 0 ]] || {
+    can_interact || {
         INSTALL_MODE="${INSTALL_MODE:-native}"
         return
     }
@@ -204,7 +212,7 @@ select_target() {
     local family
     local values=()
 
-    [[ -t 0 ]] || {
+    can_interact || {
         TARGET_TYPE="${TARGET_TYPE:-release}"
         OFBIZ_VERSION="${OFBIZ_VERSION:-24.09.07}"
         OFBIZ_VARIANT="${OFBIZ_VARIANT:-demo}"
