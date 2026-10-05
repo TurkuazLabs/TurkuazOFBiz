@@ -17,10 +17,11 @@ Release matrisi merkezi `config/versions.conf` katalogundan uretilir:
 ~~~text
 OFBiz 24.09.07 -> Temurin Java 17
 OFBiz 18.12.19 -> Temurin Java 8
-OFBiz 17.12.09 -> Temurin Java 8
 ~~~
 
-Her hedef icin iki paket yayinlanir:
+17.12 release ailesi Docker/source compat desteginde kalir. Apache 17.12 build yapisinda `application/distZip` bulunmadigi icin bu surum native portable matrise zorla eklenmez.
+
+Her portable hedef icin iki paket yayinlanir:
 
 ~~~text
 TurkuazOFBiz-Portable-<version>-Demo-win-x64.zip
