@@ -1,7 +1,7 @@
 # Dosya Yolu: /install.ps1
 # Amac: Windows kullanicisi icin Native portable veya Docker TurkuazOFBiz kurulumunu tek arabirimden yonetir
 # Controller - PowerShell
-# Version: 2.0.1
+# Version: 2.1.0
 # Aciklama: Ortak mode/target/version/variant modeliyle Windows native portable ve WSL/Docker kurulumlarini yonlendirir
 #
 # Bagimli Oldugu Katman: Controller | Service | Repo | Tool | View | Config
@@ -35,7 +35,9 @@ $SecretFile = Join-Path $InstallRoot "admin-password.txt"
 $CredentialsDir = Join-Path $InstallRoot "credentials"
 $StateFile = Join-Path $InstallRoot "installer-state.json"
 $DesktopShortcut = Join-Path ([Environment]::GetFolderPath("Desktop")) "TurkuazOFBiz.lnk"
-$DefaultAppPath = "/partymgr"
+$DefaultAppPath = ""
+$InstallerDefaultMode = ""
+$InstallerDefaultHttpsPort = 0
 
 function Write-Step {
     param([string]$Message)
@@ -74,6 +76,35 @@ function Read-MenuChoice {
 
         Write-Host "Gecersiz secim. $Min-$Max arasinda bir deger girin." -ForegroundColor Yellow
     }
+}
+
+function Get-ConfigValue {
+    param(
+        [string]$ConfigPath,
+        [string]$VariableName
+    )
+
+    $content = Get-Content -Path $ConfigPath -Raw
+    $pattern = '(?m)^' + [regex]::Escape($VariableName) + '="([^"]*)"'
+    $match = [regex]::Match($content, $pattern)
+
+    if (-not $match.Success) {
+        Fail "Config degeri bulunamadi: $VariableName"
+    }
+
+    return [string]$match.Groups[1].Value
+}
+
+function Initialize-InstallerConfig {
+    $installerConfig = Join-Path $ManagedRepo "config\installer.conf"
+
+    if (-not (Test-Path $installerConfig)) {
+        Fail "Installer config bulunamadi: $installerConfig"
+    }
+
+    $script:InstallerDefaultMode = Get-ConfigValue -ConfigPath $installerConfig -VariableName "OFBIZ_INSTALL_MODE_DEFAULT"
+    $script:InstallerDefaultHttpsPort = [int](Get-ConfigValue -ConfigPath $installerConfig -VariableName "OFBIZ_INSTALL_HTTPS_PORT_DEFAULT")
+    $script:DefaultAppPath = Get-ConfigValue -ConfigPath $installerConfig -VariableName "OFBIZ_INSTALL_APP_PATH_DEFAULT"
 }
 
 function Get-ConfigMultilineValues {
@@ -131,7 +162,8 @@ function Select-InstallMode {
     Write-Host " 1 - Native Portable  (Docker/WSL gerekmez, onerilen)"
     Write-Host " 2 - Docker           (WSL2 + Docker Desktop)"
 
-    $choice = Read-MenuChoice -Prompt "Kurulum modu" -Min 1 -Max 2 -Default 1
+    $defaultChoice = if ($InstallerDefaultMode -eq "docker") { 2 } else { 1 }
+    $choice = Read-MenuChoice -Prompt "Kurulum modu" -Min 1 -Max 2 -Default $defaultChoice
     $script:InstallMode = if ($choice -eq 1) { "native" } else { "docker" }
 }
 
@@ -164,8 +196,8 @@ function Select-NativeTarget {
 
     Select-Variant
 
-    if ($HttpsPort -ne 8443) {
-        Fail "Windows native portable paket su anda HTTPS 8443 portunu kullanir. Docker modu ozel port destekler."
+    if ($HttpsPort -ne $InstallerDefaultHttpsPort) {
+        Fail "Windows native portable paket su anda HTTPS $InstallerDefaultHttpsPort portunu kullanir. Docker modu ozel port destekler."
     }
 
     Write-Host ""
@@ -236,6 +268,7 @@ function Save-InstallerState {
         target = $OFBizVersion
         variant = $Variant
         https_port = $HttpsPort
+        app_path = $DefaultAppPath
         native_path = $NativePath
     }
 
@@ -272,6 +305,13 @@ function Restore-InstallerState {
 
     if ($state.https_port) {
         $script:HttpsPort = [int]$state.https_port
+    }
+
+    if ($state.app_path) {
+        $script:DefaultAppPath = [string]$state.app_path
+    }
+    elseif (-not $DefaultAppPath -and (Test-Path (Join-Path $ManagedRepo "config\installer.conf"))) {
+        Initialize-InstallerConfig
     }
 
     return $state
@@ -714,6 +754,7 @@ function Invoke-DockerInstall {
 
 function Invoke-Install {
     Sync-ManagedRepo
+    Initialize-InstallerConfig
     Select-InstallMode
 
     if ($InstallMode -eq "native") {
@@ -835,6 +876,8 @@ function Invoke-Doctor {
         Sync-ManagedRepo
     }
 
+    Initialize-InstallerConfig
+
     if (Test-Path $StateFile) {
         Restore-InstallerState | Out-Null
     }
@@ -885,6 +928,12 @@ try {
         "open"     {
             if (Test-Path $StateFile) {
                 Restore-InstallerState | Out-Null
+            }
+            else {
+                if (-not (Test-Path (Join-Path $ManagedRepo "config\installer.conf"))) {
+                    Sync-ManagedRepo
+                }
+                Initialize-InstallerConfig
             }
             Open-OFBiz
         }
