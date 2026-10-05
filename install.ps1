@@ -1,7 +1,7 @@
 # Dosya Yolu: /install.ps1
 # Amac: Windows kullanicisi icin Native portable veya Docker TurkuazOFBiz kurulumunu tek arabirimden yonetir
 # Controller - PowerShell
-# Version: 2.1.0
+# Version: 2.2.0
 # Aciklama: Ortak mode/target/version/variant modeliyle Windows native portable ve WSL/Docker kurulumlarini yonlendirir
 #
 # Bagimli Oldugu Katman: Controller | Service | Repo | Tool | View | Config
@@ -183,15 +183,18 @@ function Select-Variant {
 
 function Select-NativeTarget {
     $versionsConfig = Join-Path $ManagedRepo "config\versions.conf"
+    $values = @(
+        Get-ConfigMultilineValues -ConfigPath $versionsConfig -VariableName "OFBIZ_PORTABLE_RELEASES" |
+            Sort-Object -Descending
+    )
 
     $script:TargetType = "release"
 
     if (-not $OFBizVersion) {
-        $values = @(
-            Get-ConfigMultilineValues -ConfigPath $versionsConfig -VariableName "OFBIZ_PORTABLE_RELEASES" |
-                Sort-Object -Descending
-        )
         $script:OFBizVersion = Select-ValueMenu -Title "Windows native portable OFBiz surumu" -Values $values
+    }
+    elseif ($values -notcontains $OFBizVersion) {
+        Fail "Windows native portable katalogunda olmayan OFBiz surumu: $OFBizVersion"
     }
 
     Select-Variant
@@ -447,7 +450,6 @@ function Install-NativePackage {
         Remove-Item -Path $tempRoot -Recurse -Force -ErrorAction SilentlyContinue
     }
 
-    Save-InstallerState -NativePath $targetPath
     return $targetPath
 }
 
@@ -481,6 +483,7 @@ function Invoke-NativeInstall {
 
     Write-Step "Native Apache OFBiz baslatiliyor"
     Invoke-NativeCommand -NativePath $nativePath -CommandFile "Start.cmd" -Argument "nopause"
+    Save-InstallerState -NativePath $nativePath
     Ensure-DesktopShortcut
 
     Write-Host ""
@@ -690,6 +693,285 @@ function Ensure-DesktopShortcut {
 
 function Get-OFBizUrl {
     return "https://localhost:$HttpsPort$DefaultAppPath"
+}
+
+function Wait-OFBizReady {
+    $url = Get-OFBizUrl
+
+    if (-not (Test-Command "curl.exe")) {
+        Fail "curl.exe bulunamadi; OFBiz readiness kontrolu yapilamiyor."
+    }
+
+    for ($attempt = 1; $attempt -le 72; $attempt++) {
+        $httpCode = (& curl.exe --insecure --silent --output NUL --write-out "%{http_code}" $url 2>$null)
+        $httpCode = ([string]$httpCode).Trim()
+
+        if ($httpCode -match '^[23][0-9][0-9]
+function Prepare-TargetImage {
+    param(
+        [string]$LinuxDistro,
+        [string]$LinuxRepo
+    )
+
+    Write-Step "Apache OFBiz $TargetType $OFBizVersion $Variant image kontrol ediliyor"
+
+    & wsl.exe -d $LinuxDistro -- bash -lc "cd '$LinuxRepo' && bash controllers/ofbiz.sh docker pull '$TargetType' '$OFBizVersion' '$Variant'"
+
+    if ($LASTEXITCODE -eq 0) {
+        return
+    }
+
+    Write-Step "Resmi image bulunamadi; kaynak koddan local Docker image build ediliyor"
+    Invoke-WslBash -LinuxDistro $LinuxDistro -Command "cd '$LinuxRepo' && bash controllers/ofbiz.sh docker build '$TargetType' '$OFBizVersion' '$Variant'"
+}
+
+function Invoke-DockerInstall {
+    $linuxDistro = Resolve-WslDistro
+    Write-Step "WSL dagitimi: $linuxDistro"
+    Ensure-Docker -LinuxDistro $linuxDistro
+
+    $linuxRepo = Convert-ToWslPath -WindowsPath $ManagedRepo -LinuxDistro $linuxDistro
+    $password = Get-AdminPassword
+
+    Write-Step "Docker ortam kontrolu"
+    Invoke-WslBash -LinuxDistro $linuxDistro -Command "cd '$linuxRepo' && bash controllers/ofbiz.sh doctor docker"
+
+    Prepare-TargetImage -LinuxDistro $linuxDistro -LinuxRepo $linuxRepo
+
+    Write-Step "Diger TurkuazOFBiz container'lari durduruluyor"
+    Stop-OtherTurkuazContainers -LinuxDistro $linuxDistro
+
+    Write-Step "Apache OFBiz Docker container baslatiliyor"
+    $containerPrefix = "turkuazofbiz-$Variant"
+
+    Invoke-WslBash -LinuxDistro $linuxDistro -Command "cd '$linuxRepo' && OFBIZ_DOCKER_CONTAINER_NAME='$containerPrefix' OFBIZ_ADMIN_PASSWORD='$password' OFBIZ_HTTPS_PORT='$HttpsPort' bash controllers/ofbiz.sh docker run '$TargetType' '$OFBizVersion' '$Variant'"
+
+    Wait-OFBizReady
+    Save-InstallerState
+    Ensure-DesktopShortcut
+
+    Write-Host ""
+    Write-Host "============================================================" -ForegroundColor Green
+    Write-Host " TurkuazOFBiz Docker hazir" -ForegroundColor Green
+    Write-Host "============================================================" -ForegroundColor Green
+    Write-Host " Hedef       : $TargetType / $OFBizVersion / $Variant"
+    Write-Host " Adres       : $(Get-OFBizUrl)"
+    Write-Host " Kullanici   : admin"
+    Write-Host " Parola      : $password"
+    Write-Host " Parola dosya: $SecretFile"
+    Write-Host " WSL         : $linuxDistro"
+
+    Open-OFBiz
+}
+
+function Invoke-Install {
+    Sync-ManagedRepo
+    Initialize-InstallerConfig
+    Select-InstallMode
+
+    if ($InstallMode -eq "native") {
+        Select-NativeTarget
+        Invoke-NativeInstall
+        return
+    }
+
+    Select-DockerTarget
+    Invoke-DockerInstall
+}
+
+function Invoke-NativeStart {
+    param([object]$State)
+
+    $nativePath = [string]$State.native_path
+
+    if (-not $nativePath -or -not (Test-Path $nativePath)) {
+        Fail "Native kurulum dizini bulunamadi. Yeniden install calistirin."
+    }
+
+    Invoke-NativeCommand -NativePath $nativePath -CommandFile "Start.cmd" -Argument "nopause"
+    Open-OFBiz
+}
+
+function Invoke-NativeStop {
+    param([object]$State)
+
+    Invoke-NativeCommand -NativePath ([string]$State.native_path) -CommandFile "Stop.cmd" -Argument "nopause"
+}
+
+function Invoke-NativeStatus {
+    param([object]$State)
+
+    Invoke-NativeCommand -NativePath ([string]$State.native_path) -CommandFile "Status.cmd" -Argument "quiet"
+}
+
+function Invoke-NativePassword {
+    param([string]$NativePath)
+
+    $passwordFile = Join-Path $NativePath "data\initial-admin-password.txt"
+
+    if (-not (Test-Path $passwordFile)) {
+        Write-Host "Ilk admin parolasi henuz uretilmemis."
+        return
+    }
+
+    $password = (Get-Content -Path $passwordFile -Raw).Trim()
+
+    Write-Host " Kullanici   : admin"
+    Write-Host " Parola      : $password"
+    Write-Host " Parola dosya: $passwordFile"
+}
+
+function Invoke-DockerStart {
+    $linuxDistro = Resolve-WslDistro
+    Ensure-Docker -LinuxDistro $linuxDistro
+    $container = Get-ContainerName
+
+    & wsl.exe -d $linuxDistro -- bash -lc "docker inspect '$container' >/dev/null 2>&1"
+
+    if ($LASTEXITCODE -ne 0) {
+        Invoke-DockerInstall
+        return
+    }
+
+    Stop-OtherTurkuazContainers -LinuxDistro $linuxDistro
+    Invoke-WslBash -LinuxDistro $linuxDistro -Command "docker start '$container' >/dev/null"
+    Wait-OFBizReady
+    Open-OFBiz
+}
+
+function Invoke-Start {
+    $state = Restore-InstallerState
+
+    if ($InstallMode -eq "native") {
+        Invoke-NativeStart -State $state
+    }
+    else {
+        Invoke-DockerStart
+    }
+}
+
+function Invoke-Stop {
+    $state = Restore-InstallerState
+
+    if ($InstallMode -eq "native") {
+        Invoke-NativeStop -State $state
+        return
+    }
+
+    $linuxDistro = Resolve-WslDistro
+    Ensure-Docker -LinuxDistro $linuxDistro
+    $container = Get-ContainerName
+
+    Invoke-WslBash -LinuxDistro $linuxDistro -Command "docker stop '$container' >/dev/null 2>&1 || true"
+    Write-Host "TurkuazOFBiz container durduruldu: $container"
+}
+
+function Invoke-Status {
+    $state = Restore-InstallerState
+
+    Write-Host "Kurulum modu : $InstallMode"
+    Write-Host "Secili hedef : $TargetType / $OFBizVersion / $Variant"
+
+    if ($InstallMode -eq "native") {
+        Invoke-NativeStatus -State $state
+        return
+    }
+
+    $linuxDistro = Resolve-WslDistro
+    Ensure-Docker -LinuxDistro $linuxDistro
+    $container = Get-ContainerName
+
+    Invoke-WslBash -LinuxDistro $linuxDistro -Command "docker ps -a --filter 'name=^/$container$' --format 'table {{.Names}}\t{{.Status}}\t{{.Image}}\t{{.Ports}}'"
+}
+
+function Invoke-Doctor {
+    if (-not (Test-Path (Join-Path $ManagedRepo "controllers\ofbiz.sh"))) {
+        Sync-ManagedRepo
+    }
+
+    Initialize-InstallerConfig
+
+    if (Test-Path $StateFile) {
+        Restore-InstallerState | Out-Null
+    }
+    elseif (-not $InstallMode) {
+        $script:InstallMode = "native"
+    }
+
+    if ($InstallMode -eq "native") {
+        Write-Host "Windows Native:"
+        Write-Host " PowerShell : $($PSVersionTable.PSVersion)"
+        Write-Host " curl.exe   : $(if (Test-Command 'curl.exe') { 'OK' } else { 'YOK' })"
+        Write-Host " NativeRoot : $NativeRoot"
+        return
+    }
+
+    $linuxDistro = Resolve-WslDistro
+    Ensure-Docker -LinuxDistro $linuxDistro
+    $linuxRepo = Convert-ToWslPath -WindowsPath $ManagedRepo -LinuxDistro $linuxDistro
+
+    Invoke-WslBash -LinuxDistro $linuxDistro -Command "cd '$linuxRepo' && bash controllers/ofbiz.sh doctor docker"
+}
+
+function Invoke-Password {
+    $state = Restore-InstallerState
+
+    if ($InstallMode -eq "native") {
+        Invoke-NativePassword -NativePath ([string]$state.native_path)
+        return
+    }
+
+    $password = Get-AdminPassword
+    $targetSecret = Get-TargetCredentialFile
+
+    Write-Host "Kullanici    : admin"
+    Write-Host "Parola       : $password"
+    Write-Host "Hedef        : $TargetType / $OFBizVersion"
+    Write-Host "Varyant      : $Variant"
+    Write-Host "Parola dosya : $targetSecret"
+}
+
+try {
+    switch ($Action) {
+        "install"  { Invoke-Install }
+        "start"    { Invoke-Start }
+        "stop"     { Invoke-Stop }
+        "status"   { Invoke-Status }
+        "doctor"   { Invoke-Doctor }
+        "open"     {
+            if (Test-Path $StateFile) {
+                Restore-InstallerState | Out-Null
+            }
+            else {
+                if (-not (Test-Path (Join-Path $ManagedRepo "config\installer.conf"))) {
+                    Sync-ManagedRepo
+                }
+                Initialize-InstallerConfig
+            }
+            Open-OFBiz
+        }
+        "password" { Invoke-Password }
+        default    { Fail "Bilinmeyen action: $Action" }
+    }
+
+    exit 0
+}
+catch {
+    Write-Host ""
+    Write-Host $_.Exception.Message -ForegroundColor Red
+    Write-Host ""
+    Write-Host "Repo: $ProjectUrl" -ForegroundColor Yellow
+    exit 1
+}
+) {
+            Write-Host "[TurkuazOFBiz] OFBiz hazir: HTTP $httpCode"
+            return
+        }
+
+        Start-Sleep -Seconds 5
+    }
+
+    Fail "OFBiz HTTPS hazirlik zaman asimina ugradi: $url"
 }
 
 function Open-OFBiz {
