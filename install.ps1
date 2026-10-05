@@ -1,7 +1,7 @@
 # Dosya Yolu: /install.ps1
 # Amac: Windows kullanicisi icin Native portable veya Docker TurkuazOFBiz kurulumunu tek arabirimden yonetir
 # Controller - PowerShell
-# Version: 2.3.1
+# Version: 2.3.2
 # Aciklama: Ortak mode/target/version/variant modeliyle Windows native portable ve WSL/Docker kurulumlarini yonlendirir
 #
 # Bagimli Oldugu Katman: Controller | Service | Repo | Tool | View | Config
@@ -18,8 +18,8 @@ param(
     [string]$OFBizVersion = "",
     [ValidateSet("", "runtime", "demo")]
     [string]$Variant = "",
-    [ValidateRange(1, 65535)]
-    [int]$HttpsPort = 8443
+    [ValidateRange(0, 65535)]
+    [int]$HttpsPort = 0
 )
 
 $ErrorActionPreference = "Stop"
@@ -104,6 +104,7 @@ function Initialize-InstallerConfig {
     if (-not (Test-Path $installerConfig)) {
         Fail "Installer config bulunamadi: $installerConfig"
     }
+
     if (-not (Test-Path $dockerConfig)) {
         Fail "Docker config bulunamadi: $dockerConfig"
     }
@@ -113,6 +114,10 @@ function Initialize-InstallerConfig {
     $script:DefaultAppPath = Get-ConfigValue -ConfigPath $installerConfig -VariableName "OFBIZ_INSTALL_APP_PATH_DEFAULT"
     $script:DockerLegacyReleasePrefix = Get-ConfigValue -ConfigPath $dockerConfig -VariableName "OFBIZ_DOCKER_LEGACY_RELEASE_PREFIX"
     $script:DockerLegacyRequiredVariant = Get-ConfigValue -ConfigPath $dockerConfig -VariableName "OFBIZ_DOCKER_LEGACY_REQUIRED_VARIANT"
+
+    if ($HttpsPort -eq 0) {
+        $script:HttpsPort = $InstallerDefaultHttpsPort
+    }
 }
 
 function Get-ConfigMultilineValues {
@@ -714,20 +719,7 @@ function Wait-OFBizReady {
         $httpCode = (& curl.exe --insecure --silent --output NUL --write-out "%{http_code}" $url 2>$null)
         $httpCode = ([string]$httpCode).Trim()
 
-        if ($httpCode -match '^[23][0-9][0-9]$') {
-            Write-Host "[TurkuazOFBiz] OFBiz hazir: HTTP $httpCode"
-            return
-        }
-
-        Start-Sleep -Seconds 5
-    }
-
-    Fail "OFBiz HTTPS hazirlik zaman asimina ugradi: $url"
-}
-
-function Open-OFBiz {
-    Start-Process (Get-OFBizUrl) | Out-Null
-}
+        if ($httpCode -match '^[23][0-9][0-9]
 
 function Prepare-TargetImage {
     param(
@@ -1058,7 +1050,6 @@ function Invoke-DockerInstall {
 
 function Invoke-Install {
     Sync-ManagedRepo
-    Initialize-InstallerConfig
     Select-InstallMode
 
     if ($InstallMode -eq "native") {
@@ -1180,8 +1171,6 @@ function Invoke-Doctor {
         Sync-ManagedRepo
     }
 
-    Initialize-InstallerConfig
-
     if (Test-Path $StateFile) {
         Restore-InstallerState | Out-Null
     }
@@ -1232,12 +1221,6 @@ try {
         "open"     {
             if (Test-Path $StateFile) {
                 Restore-InstallerState | Out-Null
-            }
-            else {
-                if (-not (Test-Path (Join-Path $ManagedRepo "config\installer.conf"))) {
-                    Sync-ManagedRepo
-                }
-                Initialize-InstallerConfig
             }
             Open-OFBiz
         }
