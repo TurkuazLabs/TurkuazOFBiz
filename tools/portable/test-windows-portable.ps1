@@ -1,7 +1,7 @@
 # Dosya Yolu: /tools/portable/test-windows-portable.ps1
 # Amac: Uretilen Windows portable Demo ve Runtime paketlerini gercek HTTPS ile smoke test eder
 # Tool - PowerShell
-# Version: 1.2.0
+# Version: 1.2.1
 # Aciklama: Surum ve Java metadata dahil portable paketleri acar, Start/Stop ve /partymgr readiness akisini dogrular
 #
 # Bagimli Oldugu Katman: Tool | View
@@ -121,7 +121,11 @@ function Test-Package {
 
     $packageVersion = (Get-Content -Path $versionFile -Raw).Trim()
     $packageJavaMajor = (Get-Content -Path $javaMajorFile -Raw).Trim()
-    $metadata = Get-Content -Path $metadataFile -Raw
+    $metadataLines = @(
+        Get-Content -Path $metadataFile |
+            ForEach-Object { $_.Trim() } |
+            Where-Object { $_ }
+    )
 
     if ($packageVersion -ne $OFBizVersion) {
         Fail "$displayMode OFBiz metadata surumu beklenen $OFBizVersion degil: $packageVersion"
@@ -129,9 +133,10 @@ function Test-Package {
     if ($packageJavaMajor -ne $ExpectedJavaMajor) {
         Fail "$displayMode Java metadata major beklenen $ExpectedJavaMajor degil: $packageJavaMajor"
     }
-    if ($metadata -notmatch "(?m)^ofbiz\.version=$([regex]::Escape($OFBizVersion))$" -or
-        $metadata -notmatch "(?m)^java\.major=$([regex]::Escape($ExpectedJavaMajor))$" -or
-        $metadata -notmatch "(?m)^mode=$Mode$") {
+    if ($metadataLines -notcontains "ofbiz.version=$OFBizVersion" -or
+        $metadataLines -notcontains "java.major=$ExpectedJavaMajor" -or
+        $metadataLines -notcontains "mode=$Mode" -or
+        $metadataLines -notcontains "platform=windows-x64") {
         Fail "$displayMode portable metadata icerigi tutarsiz."
     }
 
