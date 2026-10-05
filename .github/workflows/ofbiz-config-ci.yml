@@ -1,7 +1,7 @@
 # Dosya Yolu: /.github/workflows/ofbiz-config-ci.yml
 # Amac: TurkuazOFBiz araclarinin statik, release matrisi, doctor ve Docker dogrulamalarini calistirir
 # Tool - YAML
-# Version: 2.21.0
+# Version: 2.22.0
 # Aciklama: Unified installer modlari, syntax, portable katalog/Java uyumu, runtime matrisi ve Docker testlerini kosar
 #
 # Bagimli Oldugu Katman: Tool | Controller | Service | Repo | Config
@@ -106,6 +106,12 @@ jobs:
           grep -Fq 'OFBIZ_APP_PATH="${OFBIZ_APP_PATH:-}"' install.sh
           grep -Fq 'OFBIZ_INSTALL_APP_PATH_DEFAULT="/partymgr"' config/installer.conf
           grep -Fq 'OFBIZ_INSTALL_MODE_DEFAULT="native"' config/installer.conf
+          grep -Fq 'OFBIZ_DOCKER_LEGACY_RELEASE_PREFIX="17.12."' config/docker.conf
+          grep -Fq 'OFBIZ_DOCKER_LEGACY_REQUIRED_VARIANT="demo"' config/docker.conf
+          grep -Fq 'OFBIZ_DOCKER_LEGACY_RELEASE_PREFIX' install.sh
+          grep -Fq 'OFBIZ_DOCKER_LEGACY_REQUIRED_VARIANT' install.sh
+          grep -Fq 'OFBIZ_DOCKER_LEGACY_RELEASE_PREFIX' install.ps1
+          grep -Fq 'OFBIZ_DOCKER_LEGACY_REQUIRED_VARIANT' install.ps1
           grep -Fq 'doctor docker' install.sh
           grep -Fq '$Variant -eq "demo"' install.ps1
           grep -Fq '$password = "ofbiz"' install.ps1
