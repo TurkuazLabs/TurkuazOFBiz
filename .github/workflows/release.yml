@@ -1,8 +1,8 @@
 # Dosya Yolu: /.github/workflows/release.yml
 # Amac: Basarili main CI sonrasinda VERSION degerinden cok-surumlu portable paketler ve GitHub release olusturur
 # Tool - YAML
-# Version: 1.5.0
-# Aciklama: Portable hedef matrisini merkezi config'den cozer, dogru Java major ile build/smoke yapar ve tum asset'leri yayinlar
+# Version: 1.5.1
+# Aciklama: Yalnizca current main CI sonucunu kabul eder, portable matrisini config'den cozer ve tekil release asset'lerini yayinlar
 #
 # Bagimli Oldugu Katman: Tool | View | Config
 
@@ -18,13 +18,46 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: turkuazofbiz-release-${{ github.event.workflow_run.head_sha }}
+  cancel-in-progress: true
+
 jobs:
-  portable-matrix:
-    name: Resolve portable matrix
+  current-main:
+    name: Verify current main
     if: >-
       github.event.workflow_run.conclusion == 'success' &&
       github.event.workflow_run.event == 'push' &&
       github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-latest
+    outputs:
+      current: ${{ steps.current.outputs.current }}
+
+    steps:
+      - name: Compare validated commit with current main
+        id: current
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VALIDATED_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+
+          CURRENT_MAIN_SHA="$(gh api "repos/${GITHUB_REPOSITORY}/commits/main" --jq '.sha')"
+
+          if [[ "${VALIDATED_SHA}" == "${CURRENT_MAIN_SHA}" ]]; then
+            echo "current=true" >> "${GITHUB_OUTPUT}"
+            echo "Validated commit is current main."
+          else
+            echo "current=false" >> "${GITHUB_OUTPUT}"
+            echo "Validated commit is stale; portable release build will be skipped."
+          fi
+
+  portable-matrix:
+    name: Resolve portable matrix
+    needs:
+      - current-main
+    if: needs.current-main.outputs.current == 'true'
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.matrix.outputs.matrix }}
@@ -72,10 +105,7 @@ jobs:
     name: Build Windows portable ${{ matrix.version }} / Java ${{ matrix.java }}
     needs:
       - portable-matrix
-    if: >-
-      github.event.workflow_run.conclusion == 'success' &&
-      github.event.workflow_run.event == 'push' &&
-      github.event.workflow_run.head_branch == 'main'
+    if: needs.portable-matrix.result == 'success'
     runs-on: windows-latest
     strategy:
       fail-fast: false
@@ -134,12 +164,13 @@ jobs:
   release:
     name: Publish version
     needs:
+      - current-main
       - portable-matrix
       - portable-windows
     if: >-
-      github.event.workflow_run.conclusion == 'success' &&
-      github.event.workflow_run.event == 'push' &&
-      github.event.workflow_run.head_branch == 'main'
+      needs.current-main.outputs.current == 'true' &&
+      needs.portable-matrix.result == 'success' &&
+      needs.portable-windows.result == 'success'
     runs-on: ubuntu-latest
 
     steps:
