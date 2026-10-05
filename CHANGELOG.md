@@ -35,6 +35,7 @@ Surumleme Semantic Versioning mantigini izler.
 - Windows CRLF satir sonlarinin portable metadata smoke testini yanlis negatif sonuclandirmasi giderildi.
 - Eski basarili CI kosularinin current main degilken pahali Windows portable build baslatmasi engellendi.
 - Ayni validated commit icin yinelenen release workflow kosulari concurrency grubu ile tekillestirildi.
+- Ayni branch'teki eski CI kosulari yeni commit geldiginde concurrency ile iptal edilerek gereksiz runtime/Docker tekrarlarinin kuyruga yigilmamasi saglandi.
 
 ### Verified
 
