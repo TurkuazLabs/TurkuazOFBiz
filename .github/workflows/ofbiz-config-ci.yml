@@ -1,7 +1,7 @@
 # Dosya Yolu: /.github/workflows/ofbiz-config-ci.yml
 # Amac: TurkuazOFBiz araclarinin statik, release matrisi, doctor ve Docker dogrulamalarini calistirir
 # Tool - YAML
-# Version: 2.20.0
+# Version: 2.21.0
 # Aciklama: Unified installer modlari, syntax, portable katalog/Java uyumu, runtime matrisi ve Docker testlerini kosar
 #
 # Bagimli Oldugu Katman: Tool | Controller | Service | Repo | Config
@@ -132,6 +132,9 @@ jobs:
           grep -Fq 'docker build' install.ps1
           grep -Fq 'docker build' install.sh
           grep -Fq 'Get-FileHash -Path $zipPath -Algorithm SHA256' install.ps1
+          grep -Fq 'Wait-OFBizReady' install.ps1
+          grep -Fq 'Windows native portable katalogunda olmayan OFBiz surumu' install.ps1
+          grep -Fq 'Save-InstallerState -NativePath $nativePath' install.ps1
           grep -Fq 'Docker/WSL  : gerekmez' install.ps1
           test -f tools/portable/PortableBootstrap.java
           test -f tools/portable/legacy-stage.init.gradle
