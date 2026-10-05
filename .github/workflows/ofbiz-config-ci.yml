@@ -1,8 +1,8 @@
 # Dosya Yolu: /.github/workflows/ofbiz-config-ci.yml
 # Amac: TurkuazOFBiz araclarinin statik, release matrisi, doctor ve Docker dogrulamalarini calistirir
 # Tool - YAML
-# Version: 2.18.0
-# Aciklama: Syntax, portable katalog/Java uyumu, release metadata, runtime matrisi ve Docker testlerini kosar
+# Version: 2.19.0
+# Aciklama: Unified installer modlari, syntax, portable katalog/Java uyumu, runtime matrisi ve Docker testlerini kosar
 #
 # Bagimli Oldugu Katman: Tool | Controller | Service | Repo | Config
 
@@ -108,14 +108,27 @@ jobs:
           grep -Fq '"password" { Invoke-Password }' install.ps1
           grep -Fq 'OFBIZ_VARIANT}" == "demo"' install.sh
           grep -Fq 'password="ofbiz"' install.sh
-          grep -Fq 'TurkuazOFBiz - OFBiz Surum Secimi' install.ps1
+          grep -Fq 'TurkuazOFBiz - Kurulum Modu' install.ps1
+          grep -Fq 'Native Portable' install.ps1
+          grep -Fq 'OFBIZ_PORTABLE_RELEASES' install.ps1
+          grep -Fq 'Install-NativePackage' install.ps1
+          grep -Fq 'install_mode' install.ps1
+          grep -Fq 'INSTALL_MODE' install.sh
+          grep -Fq 'Native  (Docker gerekmez, onerilen)' install.sh
+          grep -Fq 'run background' install.sh
+          grep -Fq 'run status' install.sh
+          test -f config/installer.conf
           grep -Fq 'OFBIZ_RELEASES_24_09' install.ps1
           grep -Fq 'OFBIZ_RELEASES_18_12' install.ps1
           grep -Fq 'OFBIZ_RELEASES_17_12' install.ps1
           grep -Fq 'OFBIZ_SNAPSHOT_BRANCHES' install.ps1
           grep -Fq 'installer-state.json' install.ps1
+          grep -Fq 'installer-state.conf' install.sh
           grep -Fq 'turkuazofbiz-$Variant-$TargetType-$safeTarget' install.ps1
           grep -Fq 'docker build' install.ps1
+          grep -Fq 'docker build' install.sh
+          grep -Fq 'Get-FileHash -Path $zipPath -Algorithm SHA256' install.ps1
+          grep -Fq 'Docker/WSL  : gerekmez' install.ps1
           test -f tools/portable/PortableBootstrap.java
           test -f tools/portable/legacy-stage.init.gradle
           test -f tools/portable/windows/TurkuazOFBiz.cmd
