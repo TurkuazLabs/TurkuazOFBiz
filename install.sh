@@ -1,7 +1,7 @@
 # Dosya Yolu: /install.sh
 # Amac: Linux ve WSL kullanicisi icin Native veya Docker TurkuazOFBiz kurulumunu tek arabirimden yonetir
 # Controller - Shell
-# Version: 2.0.2
+# Version: 2.1.0
 # Aciklama: Ortak mode/target/version/variant modeliyle native Linux ve Docker kurulum, start, stop, status, doctor ve open aksiyonlarini yonlendirir
 #
 # Bagimli Oldugu Katman: Controller | Service | Repo | Tool | View | Config
@@ -21,7 +21,7 @@ TARGET_TYPE="${OFBIZ_TARGET_TYPE:-}"
 OFBIZ_VERSION="${OFBIZ_VERSION:-}"
 OFBIZ_VARIANT="${OFBIZ_VARIANT:-}"
 OFBIZ_HTTPS_PORT="${OFBIZ_HTTPS_PORT:-}"
-OFBIZ_APP_PATH="${OFBIZ_APP_PATH:-/partymgr}"
+OFBIZ_APP_PATH="${OFBIZ_APP_PATH:-}"
 NATIVE_INSTALL_ROOT="${OFBIZ_NATIVE_INSTALL_ROOT:-}"
 
 log() {
@@ -138,6 +138,20 @@ resolve_repo_root() {
     printf '%s\n' "${MANAGED_REPO}"
 }
 
+load_installer_config() {
+    local repo_root="${1:?repo root required}"
+    local installer_config="${repo_root}/config/installer.conf"
+    local versions_config="${repo_root}/config/versions.conf"
+
+    [[ -f "${installer_config}" ]] || fail "Installer config bulunamadi: ${installer_config}"
+    [[ -f "${versions_config}" ]] || fail "Version config bulunamadi: ${versions_config}"
+
+    # shellcheck source=/dev/null
+    source "${installer_config}"
+    # shellcheck source=/dev/null
+    source "${versions_config}"
+}
+
 config_multiline_values() {
     local config_file="${1:?config file required}"
     local variable_name="${2:?variable required}"
@@ -169,7 +183,7 @@ select_install_mode() {
     local choice
 
     can_interact || {
-        INSTALL_MODE="${INSTALL_MODE:-native}"
+        INSTALL_MODE="${INSTALL_MODE:-${OFBIZ_INSTALL_MODE_DEFAULT}}"
         return
     }
 
@@ -213,9 +227,9 @@ select_target() {
     local values=()
 
     can_interact || {
-        TARGET_TYPE="${TARGET_TYPE:-release}"
-        OFBIZ_VERSION="${OFBIZ_VERSION:-24.09.07}"
-        OFBIZ_VARIANT="${OFBIZ_VARIANT:-demo}"
+        TARGET_TYPE="${TARGET_TYPE:-${OFBIZ_INSTALL_TARGET_DEFAULT}}"
+        OFBIZ_VERSION="${OFBIZ_VERSION:-${OFBIZ_DEFAULT_VERSION}}"
+        OFBIZ_VARIANT="${OFBIZ_VARIANT:-${OFBIZ_INSTALL_VARIANT_DEFAULT}}"
         return
     }
 
@@ -297,12 +311,13 @@ restore_state() {
 }
 
 ensure_defaults() {
-    INSTALL_MODE="${INSTALL_MODE:-native}"
-    TARGET_TYPE="${TARGET_TYPE:-release}"
-    OFBIZ_VERSION="${OFBIZ_VERSION:-24.09.07}"
-    OFBIZ_VARIANT="${OFBIZ_VARIANT:-demo}"
-    OFBIZ_HTTPS_PORT="${OFBIZ_HTTPS_PORT:-8443}"
-    NATIVE_INSTALL_ROOT="${NATIVE_INSTALL_ROOT:-/opt/ofbiz}"
+    INSTALL_MODE="${INSTALL_MODE:-${OFBIZ_INSTALL_MODE_DEFAULT}}"
+    TARGET_TYPE="${TARGET_TYPE:-${OFBIZ_INSTALL_TARGET_DEFAULT}}"
+    OFBIZ_VERSION="${OFBIZ_VERSION:-${OFBIZ_DEFAULT_VERSION}}"
+    OFBIZ_VARIANT="${OFBIZ_VARIANT:-${OFBIZ_INSTALL_VARIANT_DEFAULT}}"
+    OFBIZ_HTTPS_PORT="${OFBIZ_HTTPS_PORT:-${OFBIZ_INSTALL_HTTPS_PORT_DEFAULT}}"
+    OFBIZ_APP_PATH="${OFBIZ_APP_PATH:-${OFBIZ_INSTALL_APP_PATH_DEFAULT}}"
+    NATIVE_INSTALL_ROOT="${NATIVE_INSTALL_ROOT:-${OFBIZ_LINUX_NATIVE_INSTALL_ROOT}}"
 }
 
 ensure_docker() {
@@ -397,6 +412,10 @@ install_native() {
     local repo_root="${1:?repo root required}"
     local target_ref
 
+    if [[ "${OFBIZ_HTTPS_PORT}" != "${OFBIZ_INSTALL_HTTPS_PORT_DEFAULT}" ]]; then
+        fail "Linux Native su anda HTTPS ${OFBIZ_INSTALL_HTTPS_PORT_DEFAULT} portunu kullanir. Ozel port icin Docker modunu secin."
+    fi
+
     log "Native Linux kurulumu: ${TARGET_TYPE} / ${OFBIZ_VERSION} / ${OFBIZ_VARIANT}"
 
     if [[ "${TARGET_TYPE}" == "release" ]]; then
@@ -487,6 +506,8 @@ install_ofbiz() {
     local repo_root
 
     repo_root="$(resolve_repo_root)"
+    load_installer_config "${repo_root}"
+    ensure_defaults
     select_install_mode
     select_target "${repo_root}"
     ensure_defaults
@@ -584,6 +605,8 @@ doctor_ofbiz() {
     local repo_root
 
     repo_root="$(resolve_repo_root)"
+    load_installer_config "${repo_root}"
+    ensure_defaults
 
     if [[ -f "${STATE_FILE}" ]]; then
         restore_state
