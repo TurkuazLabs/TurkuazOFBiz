@@ -1,8 +1,8 @@
 # Dosya Yolu: /.github/workflows/release.yml
-# Amac: Basarili main CI sonrasinda VERSION degerinden GitHub tag, portable paketler ve release olusturur
+# Amac: Basarili main CI sonrasinda VERSION degerinden cok-surumlu portable paketler ve GitHub release olusturur
 # Tool - YAML
-# Version: 1.4.1
-# Aciklama: Windows portable Demo/Runtime paketlerini gercek smoke testten gecirir ve installer asset'leriyle birlikte yayinlar
+# Version: 1.5.0
+# Aciklama: Portable hedef matrisini merkezi config'den cozer, dogru Java major ile build/smoke yapar ve tum asset'leri yayinlar
 #
 # Bagimli Oldugu Katman: Tool | View | Config
 
@@ -19,13 +19,15 @@ permissions:
   contents: write
 
 jobs:
-  portable-windows:
-    name: Build Windows portable
+  portable-matrix:
+    name: Resolve portable matrix
     if: >-
       github.event.workflow_run.conclusion == 'success' &&
       github.event.workflow_run.event == 'push' &&
       github.event.workflow_run.head_branch == 'main'
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
 
     steps:
       - name: Checkout validated commit
@@ -34,19 +36,73 @@ jobs:
           ref: ${{ github.event.workflow_run.head_sha }}
           fetch-depth: 0
 
-      - name: Setup Temurin 17
+      - name: Resolve matrix from config
+        id: matrix
+        shell: bash
+        run: |
+          set -euo pipefail
+          source config/versions.conf
+
+          matrix='{"include":[]}'
+          while IFS= read -r version; do
+            [[ -z "${version}" ]] && continue
+
+            case "${version}" in
+              24.09.*) java="${OFBIZ_JAVA_24_09}" ;;
+              18.12.*) java="${OFBIZ_JAVA_18_12}" ;;
+              17.12.*) java="${OFBIZ_JAVA_17_12}" ;;
+              *)
+                echo "Portable Java mapping missing for ${version}" >&2
+                exit 1
+                ;;
+            esac
+
+            matrix="$(jq -c --arg version "${version}" --arg java "${java}" '.include += [{version: $version, java: $java}]' <<< "${matrix}")"
+          done <<< "${OFBIZ_PORTABLE_RELEASES}"
+
+          if [[ "$(jq '.include | length' <<< "${matrix}")" -lt 1 ]]; then
+            echo "Portable release matrix is empty." >&2
+            exit 1
+          fi
+
+          echo "matrix=${matrix}" >> "${GITHUB_OUTPUT}"
+          echo "${matrix}" | jq .
+
+  portable-windows:
+    name: Build Windows portable ${{ matrix.version }} / Java ${{ matrix.java }}
+    needs:
+      - portable-matrix
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'main'
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.portable-matrix.outputs.matrix) }}
+
+    steps:
+      - name: Checkout validated commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0
+
+      - name: Setup Temurin
         uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: "17"
+          java-version: ${{ matrix.java }}
           architecture: x64
 
       - name: Build portable packages
         shell: pwsh
+        env:
+          OFBIZ_VERSION: ${{ matrix.version }}
         run: |
           $output = Join-Path $env:RUNNER_TEMP "portable"
           New-Item -ItemType Directory -Force -Path $output | Out-Null
-          & .\tools\portable\build-windows-portable.ps1 -OFBizVersion "24.09.07" -OutputDirectory $output
+          & .\tools\portable\build-windows-portable.ps1 -OFBizVersion $env:OFBIZ_VERSION -OutputDirectory $output
 
           if ($LASTEXITCODE -ne 0) {
             exit $LASTEXITCODE
@@ -54,9 +110,12 @@ jobs:
 
       - name: Smoke test portable packages
         shell: pwsh
+        env:
+          OFBIZ_VERSION: ${{ matrix.version }}
+          JAVA_MAJOR: ${{ matrix.java }}
         run: |
           $output = Join-Path $env:RUNNER_TEMP "portable"
-          & .\tools\portable\test-windows-portable.ps1 -PackageDirectory $output -OFBizVersion "24.09.07"
+          & .\tools\portable\test-windows-portable.ps1 -PackageDirectory $output -OFBizVersion $env:OFBIZ_VERSION -ExpectedJavaMajor $env:JAVA_MAJOR
 
           if ($LASTEXITCODE -ne 0) {
             exit $LASTEXITCODE
@@ -65,7 +124,7 @@ jobs:
       - name: Upload portable artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: portable-windows
+          name: portable-windows-${{ matrix.version }}
           path: |
             ${{ runner.temp }}/portable/*.zip
             ${{ runner.temp }}/portable/*.sha256
@@ -75,6 +134,7 @@ jobs:
   release:
     name: Publish version
     needs:
+      - portable-matrix
       - portable-windows
     if: >-
       github.event.workflow_run.conclusion == 'success' &&
@@ -138,8 +198,33 @@ jobs:
         if: steps.current.outputs.skip != 'true' && steps.meta.outputs.skip != 'true'
         uses: actions/download-artifact@v4
         with:
-          name: portable-windows
+          pattern: portable-windows-*
+          merge-multiple: true
           path: ${{ runner.temp }}/portable
+
+      - name: Validate portable release assets
+        if: steps.current.outputs.skip != 'true' && steps.meta.outputs.skip != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          source config/versions.conf
+
+          PORTABLE_DIR="${RUNNER_TEMP}/portable"
+
+          while IFS= read -r version; do
+            [[ -z "${version}" ]] && continue
+
+            for mode in Demo Runtime; do
+              asset="TurkuazOFBiz-Portable-${version}-${mode}-win-x64.zip"
+              test -s "${PORTABLE_DIR}/${asset}"
+              test -s "${PORTABLE_DIR}/${asset}.sha256"
+
+              (
+                cd "${PORTABLE_DIR}"
+                sha256sum -c "${asset}.sha256"
+              )
+            done
+          done <<< "${OFBIZ_PORTABLE_RELEASES}"
 
       - name: Publish GitHub Release
         if: steps.current.outputs.skip != 'true' && steps.meta.outputs.skip != 'true'
@@ -160,16 +245,19 @@ jobs:
           cp install.ps1 "${PACKAGE_DIR}/TurkuazOFBiz-Installer.ps1"
           cp install.sh "${PACKAGE_DIR}/TurkuazOFBiz-Installer.sh"
 
-          test -s "${PORTABLE_DIR}/TurkuazOFBiz-Portable-24.09.07-Demo-win-x64.zip"
-          test -s "${PORTABLE_DIR}/TurkuazOFBiz-Portable-24.09.07-Demo-win-x64.zip.sha256"
-          test -s "${PORTABLE_DIR}/TurkuazOFBiz-Portable-24.09.07-Runtime-win-x64.zip"
-          test -s "${PORTABLE_DIR}/TurkuazOFBiz-Portable-24.09.07-Runtime-win-x64.zip.sha256"
+          mapfile -t portable_assets < <(
+            find "${PORTABLE_DIR}" -maxdepth 1 -type f \
+              \( -name '*.zip' -o -name '*.sha256' \) \
+              -print | sort
+          )
+
+          if [[ "${#portable_assets[@]}" -lt 4 ]]; then
+            echo "Portable release assets missing." >&2
+            exit 1
+          fi
 
           gh release create "${TAG}" \
-            "${PORTABLE_DIR}/TurkuazOFBiz-Portable-24.09.07-Demo-win-x64.zip" \
-            "${PORTABLE_DIR}/TurkuazOFBiz-Portable-24.09.07-Demo-win-x64.zip.sha256" \
-            "${PORTABLE_DIR}/TurkuazOFBiz-Portable-24.09.07-Runtime-win-x64.zip" \
-            "${PORTABLE_DIR}/TurkuazOFBiz-Portable-24.09.07-Runtime-win-x64.zip.sha256" \
+            "${portable_assets[@]}" \
             "${PACKAGE_DIR}/TurkuazOFBiz-Setup.zip" \
             "${PACKAGE_DIR}/TurkuazOFBiz-Setup.zip.sha256" \
             "${PACKAGE_DIR}/TurkuazOFBiz-Installer.ps1" \
