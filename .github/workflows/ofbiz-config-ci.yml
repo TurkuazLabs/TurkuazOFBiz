@@ -1,6 +1,6 @@
-# Dosya Yolu: /.github/workflows/ofbiz-config-ci.yml
+# Dosya Yolu: REPO_ROOT/.github/workflows/ofbiz-config-ci.yml
 # Amac: TurkuazOFBiz araclarinin statik, release matrisi, doctor ve Docker dogrulamalarini calistirir
-# Tool - YAML
+# Modul - Tool YAML
 # Version: 2.22.1
 # Aciklama: Unified installer modlari, syntax, portable katalog/Java uyumu, runtime matrisi ve Docker testlerini kosar
 #
@@ -69,9 +69,9 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Validate version state
+      - name: Validate source version state (not release authorization)
         shell: bash
-        run: bash tools/ci/validate-version-state.sh
+        run: bash tools/ci/validate-version-state.sh --source-ci
 
       - name: Validate structure and syntax
         shell: bash

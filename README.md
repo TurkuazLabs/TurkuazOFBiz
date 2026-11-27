@@ -1,10 +1,11 @@
-# Dosya Yolu: /README.md
-# Amac: TurkuazOFBiz projesinin ana giris, kurulum ve kullanim rehberini sunar
-# View - Markdown
-# Version: 3.14.0
-# Aciklama: Tek Windows/Linux installer, native portable/runtime ve opsiyonel Docker kurulum modelini tanitir
-#
-# Bagimli Oldugu Katman: View | Controller | Service | Repo | Tool | Language | Config
+<!--
+Dosya Yolu: REPO_ROOT/README.md
+Amac: TurkuazOFBiz projesinin ana giris, kurulum ve kullanim rehberini sunar
+Modul - Markdown
+Version: 3.14.0
+Aciklama: Tek Windows/Linux installer, native portable/runtime ve opsiyonel Docker kurulum modelini tanitir
+Bagimli Oldugu Katman: View | Controller | Service | Repo | Tool | Language | Config
+-->
 
 # TurkuazOFBiz
 

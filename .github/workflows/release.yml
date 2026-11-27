@@ -1,6 +1,6 @@
-# Dosya Yolu: /.github/workflows/release.yml
+# Dosya Yolu: REPO_ROOT/.github/workflows/release.yml
 # Amac: Basarili main CI sonrasinda VERSION degerinden cok-surumlu portable paketler ve GitHub release olusturur
-# Tool - YAML
+# Modul - Tool YAML
 # Version: 1.5.1
 # Aciklama: Yalnizca current main CI sonucunu kabul eder, portable matrisini config'den cozer ve tekil release asset'lerini yayinlar
 #
@@ -32,6 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       current: ${{ steps.current.outputs.current }}
+      eligible: ${{ steps.version.outputs.eligible }}
 
     steps:
       - name: Compare validated commit with current main
@@ -53,11 +54,37 @@ jobs:
             echo "Validated commit is stale; portable release build will be skipped."
           fi
 
+      - name: Checkout release eligibility source
+        if: steps.current.outputs.current == 'true'
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Verify release version state before packaging
+        id: version
+        if: steps.current.outputs.current == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          if bash tools/ci/validate-version-state.sh; then
+            echo "eligible=true" >> "$GITHUB_OUTPUT"
+          else
+            status=$?
+            if [[ "$status" -eq 2 ]]; then
+              echo "eligible=false" >> "$GITHUB_OUTPUT"
+              echo "Existing version belongs to another commit; no package or release will be produced."
+            else
+              exit "$status"
+            fi
+          fi
+
   portable-matrix:
     name: Resolve portable matrix
     needs:
       - current-main
-    if: needs.current-main.outputs.current == 'true'
+    if: needs.current-main.outputs.current == 'true' && needs.current-main.outputs.eligible == 'true'
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.matrix.outputs.matrix }}
@@ -169,6 +196,7 @@ jobs:
       - portable-windows
     if: >-
       needs.current-main.outputs.current == 'true' &&
+      needs.current-main.outputs.eligible == 'true' &&
       needs.portable-matrix.result == 'success' &&
       needs.portable-windows.result == 'success'
     runs-on: ubuntu-latest
