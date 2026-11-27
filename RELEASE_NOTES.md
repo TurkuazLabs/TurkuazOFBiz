@@ -1,10 +1,11 @@
-# Dosya Yolu: /RELEASE_NOTES.md
-# Amac: TurkuazOFBiz v1.7.0 GitHub release notlarini hazirlar
-# View - Markdown
-# Version: 1.7.0
-# Aciklama: Cok-surumlu portable dagitim ve tek Windows/Linux Native-Docker installer modelini tanitir
-#
-# Bagimli Oldugu Katman: View | Tool | Config
+<!--
+Dosya Yolu: REPO_ROOT/RELEASE_NOTES.md
+Amac: TurkuazOFBiz v1.7.0 GitHub release notlarini hazirlar
+Modul - Markdown
+Version: 1.7.0
+Aciklama: Cok-surumlu portable dagitim ve tek Windows/Linux Native-Docker installer modelini tanitir
+Bagimli Oldugu Katman: View | Tool | Config
+-->
 
 # TurkuazOFBiz v1.7.0
 
