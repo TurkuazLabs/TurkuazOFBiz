@@ -1,10 +1,11 @@
-# Dosya Yolu: /CHANGELOG.md
-# Amac: TurkuazOFBiz surumlerindeki kullaniciya donuk degisiklikleri kaydeder
-# View - Markdown
-# Version: 1.7.0
-# Aciklama: Semantic versioning tabanli proje degisiklik gecmisi
-#
-# Bagimli Oldugu Katman: View
+<!--
+Dosya Yolu: REPO_ROOT/CHANGELOG.md
+Amac: TurkuazOFBiz surumlerindeki kullaniciya donuk degisiklikleri kaydeder
+Modul - Markdown
+Version: 1.7.0
+Aciklama: Semantic versioning tabanli proje degisiklik gecmisi
+Bagimli Oldugu Katman: View
+-->
 
 # Changelog
 
